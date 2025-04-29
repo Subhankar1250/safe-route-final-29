@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useFirebase } from '@/contexts/FirebaseContext';
 import { Plus, Download, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import QRCode from 'qrcode.js';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface DriverQRCode {
   id: string;
@@ -42,8 +42,8 @@ const AdminQRCode: React.FC = () => {
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedBus, setSelectedBus] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const [currentQRCode, setCurrentQRCode] = useState<string>('');
+  const qrRef = React.useRef<HTMLDivElement>(null);
 
   const { firestore } = useFirebase();
   const { toast } = useToast();
@@ -95,20 +95,6 @@ const AdminQRCode: React.FC = () => {
     setDriverQRCodes([...driverQRCodes, newQRCode]);
     setCurrentQRCode(qrData);
     
-    // Generate QR code image
-    if (qrCanvasRef.current) {
-      QRCode.toCanvas(qrCanvasRef.current, qrData, { width: 240 }, function(error) {
-        if (error) {
-          console.error(error);
-          toast({
-            title: 'Error',
-            description: 'Failed to generate QR code',
-            variant: 'destructive',
-          });
-        }
-      });
-    }
-    
     toast({
       title: 'Success',
       description: 'QR code generated successfully',
@@ -116,23 +102,48 @@ const AdminQRCode: React.FC = () => {
   };
 
   const downloadQRCode = () => {
-    if (!qrCanvasRef.current) return;
+    if (!qrRef.current || !currentQRCode) return;
     
-    const link = document.createElement('a');
-    link.download = `driver_qr_${selectedBus}.png`;
-    link.href = qrCanvasRef.current.toDataURL();
-    link.click();
+    // Get the SVG element
+    const svgElement = qrRef.current.querySelector('svg');
+    if (!svgElement) return;
+    
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas dimensions
+    const svgRect = svgElement.getBoundingClientRect();
+    canvas.width = svgRect.width;
+    canvas.height = svgRect.height;
+    
+    // Create an image element from the SVG
+    const img = new Image();
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    
+    img.onload = () => {
+      // Draw the image to the canvas
+      ctx.drawImage(img, 0, 0);
+      
+      // Convert the canvas to a data URL and trigger a download
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `driver_qr_${selectedBus || 'code'}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+    };
+    
+    img.src = url;
   };
 
   const viewQRCode = (qrData: string) => {
     setCurrentQRCode(qrData);
-    
-    // Generate QR code image
-    if (qrCanvasRef.current) {
-      QRCode.toCanvas(qrCanvasRef.current, qrData, { width: 240 }, function(error) {
-        if (error) console.error(error);
-      });
-    }
   };
 
   return (
@@ -197,7 +208,9 @@ const AdminQRCode: React.FC = () => {
                 
                 {currentQRCode && (
                   <div className="flex flex-col items-center mt-4">
-                    <canvas ref={qrCanvasRef} className="border rounded-lg"></canvas>
+                    <div ref={qrRef} className="border rounded-lg p-4 bg-white">
+                      <QRCodeSVG value={currentQRCode} size={240} />
+                    </div>
                     <Button 
                       onClick={downloadQRCode} 
                       variant="outline" 
@@ -245,7 +258,9 @@ const AdminQRCode: React.FC = () => {
       {currentQRCode && (
         <div className="flex flex-col items-center mt-4 p-4 border rounded-lg">
           <h3 className="font-medium mb-4">QR Code Preview</h3>
-          <canvas ref={qrCanvasRef} className="border rounded-lg"></canvas>
+          <div ref={qrRef} className="border rounded-lg p-4 bg-white">
+            <QRCodeSVG value={currentQRCode} size={240} />
+          </div>
           <Button 
             onClick={downloadQRCode} 
             variant="outline" 
