@@ -24,7 +24,21 @@ const AdminQRCode: React.FC = () => {
   );
 
   const handleQRCodeGenerated = (newQRCode: DriverQRCode) => {
-    setDriverQRCodes([...driverQRCodes, newQRCode]);
+    // Check if we're replacing an existing QR code
+    const existingIndex = driverQRCodes.findIndex(
+      qr => qr.driverName === newQRCode.driverName && qr.busNumber === newQRCode.busNumber
+    );
+    
+    if (existingIndex >= 0) {
+      // Replace the existing QR code
+      const updatedQRCodes = [...driverQRCodes];
+      updatedQRCodes[existingIndex] = newQRCode;
+      setDriverQRCodes(updatedQRCodes);
+    } else {
+      // Add new QR code
+      setDriverQRCodes([...driverQRCodes, newQRCode]);
+    }
+    
     setCurrentQRCode(newQRCode.qrData);
   };
 
@@ -61,6 +75,7 @@ const AdminQRCode: React.FC = () => {
                 driverOptions={driverOptions} 
                 busOptions={busOptions}
                 onQRCodeGenerated={handleQRCodeGenerated}
+                existingQRCodes={driverQRCodes}
               />
             </DialogContent>
           </Dialog>

@@ -1,41 +1,88 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download } from 'lucide-react';
+import { Download, AlertTriangle } from 'lucide-react';
 import { DriverOption, BusOption, DriverQRCode } from '@/types/qrcode.types';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface QRCodeGeneratorProps {
   driverOptions: DriverOption[];
   busOptions: BusOption[];
   onQRCodeGenerated: (qrCode: DriverQRCode) => void;
+  existingQRCodes: DriverQRCode[];
 }
 
-const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ driverOptions, busOptions, onQRCodeGenerated }) => {
+const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ 
+  driverOptions, 
+  busOptions, 
+  onQRCodeGenerated,
+  existingQRCodes
+}) => {
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedBus, setSelectedBus] = useState<string>('');
   const [currentQRCode, setCurrentQRCode] = useState<string>('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [existingQRCode, setExistingQRCode] = useState<DriverQRCode | null>(null);
   const qrRef = React.useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const generateQRCode = () => {
+  // Check if there's an existing QR code when driver or bus selection changes
+  useEffect(() => {
+    if (selectedDriver && selectedBus) {
+      const existing = existingQRCodes.find(qr => 
+        qr.driverName === driverOptions.find(d => d.id === selectedDriver)?.name && 
+        qr.busNumber === selectedBus
+      );
+      setExistingQRCode(existing || null);
+    } else {
+      setExistingQRCode(null);
+    }
+  }, [selectedDriver, selectedBus, existingQRCodes, driverOptions]);
+
+  const validateSelections = () => {
     if (!selectedDriver || !selectedBus) {
       toast({
-        title: 'Error',
+        title: 'Validation Error',
         description: 'Please select both a driver and a bus',
         variant: 'destructive',
       });
+      return false;
+    }
+    
+    if (existingQRCode) {
+      setShowConfirmDialog(true);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const generateQRCode = () => {
+    if (!validateSelections()) {
       return;
     }
 
+    createQRCode();
+  };
+
+  const createQRCode = () => {
     const selectedDriverName = driverOptions.find(d => d.id === selectedDriver)?.name || '';
     
     // Generate QR code data
     const qrData = `driver_${selectedDriver}_${selectedBus}_${Date.now()}`;
-    
-    // In a real app, you'd save this to Firestore
     
     // Create a new QR code entry
     const newQRCode: DriverQRCode = {
@@ -48,6 +95,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ driverOptions, busOpt
     
     onQRCodeGenerated(newQRCode);
     setCurrentQRCode(qrData);
+    setShowConfirmDialog(false);
     
     toast({
       title: 'Success',
@@ -100,33 +148,40 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ driverOptions, busOpt
     <div className="space-y-4 py-4">
       <div className="space-y-2">
         <Label htmlFor="driver">Select Driver</Label>
-        <select 
-          id="driver"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          value={selectedDriver}
-          onChange={(e) => setSelectedDriver(e.target.value)}
-        >
-          <option value="">Select Driver</option>
-          {driverOptions.map(driver => (
-            <option key={driver.id} value={driver.id}>{driver.name}</option>
-          ))}
-        </select>
+        <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Driver" />
+          </SelectTrigger>
+          <SelectContent>
+            {driverOptions.map(driver => (
+              <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="bus">Select Bus</Label>
-        <select 
-          id="bus"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          value={selectedBus}
-          onChange={(e) => setSelectedBus(e.target.value)}
-        >
-          <option value="">Select Bus</option>
-          {busOptions.map(bus => (
-            <option key={bus.id} value={bus.id}>{bus.name}</option>
-          ))}
-        </select>
+        <Select value={selectedBus} onValueChange={setSelectedBus}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Bus" />
+          </SelectTrigger>
+          <SelectContent>
+            {busOptions.map(bus => (
+              <SelectItem key={bus.id} value={bus.id}>{bus.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {existingQRCode && (
+        <div className="flex items-center space-x-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            A QR code already exists for this driver and bus combination.
+          </p>
+        </div>
+      )}
       
       <Button onClick={generateQRCode} className="w-full">
         Generate QR Code
@@ -146,6 +201,22 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ driverOptions, busOpt
           </Button>
         </div>
       )}
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Override</AlertDialogTitle>
+            <AlertDialogDescription>
+              A QR code already exists for this driver and bus combination. 
+              Generating a new one will replace the existing code. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={createQRCode}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
