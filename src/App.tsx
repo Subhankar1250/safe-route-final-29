@@ -7,6 +7,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/auth/Login";
 import GuardianDashboard from "./components/guardian/GuardianDashboard";
 import DriverDashboard from "./components/driver/DriverDashboard";
+import AdminDashboard from "./components/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { FirebaseProvider } from "./contexts/FirebaseContext";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>

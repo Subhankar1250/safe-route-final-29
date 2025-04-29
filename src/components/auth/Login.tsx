@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Smartphone, Users } from "lucide-react";
+import { Smartphone, Users, Settings } from "lucide-react";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"guardian" | "driver">("guardian");
+  const [role, setRole] = useState<"guardian" | "driver" | "admin">("guardian");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -31,6 +31,8 @@ const Login: React.FC = () => {
         navigate("/guardian/dashboard");
       } else if (role === "driver") {
         navigate("/driver/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
       }
     }, 1500);
   };
@@ -46,13 +48,16 @@ const Login: React.FC = () => {
           <CardDescription>The safest route for your child's journey</CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="guardian" className="w-full" onValueChange={(value) => setRole(value as "guardian" | "driver")}>
-          <TabsList className="grid grid-cols-2 mb-4 mx-4">
+        <Tabs defaultValue="guardian" className="w-full" onValueChange={(value) => setRole(value as "guardian" | "driver" | "admin")}>
+          <TabsList className="grid grid-cols-3 mb-4 mx-4">
             <TabsTrigger value="guardian" className="flex items-center gap-2">
               <Users size={16} /> Guardian
             </TabsTrigger>
             <TabsTrigger value="driver" className="flex items-center gap-2">
               <Smartphone size={16} /> Driver
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="flex items-center gap-2">
+              <Settings size={16} /> Admin
             </TabsTrigger>
           </TabsList>
           
@@ -116,6 +121,43 @@ const Login: React.FC = () => {
                 Having trouble scanning? Contact your school administrator
               </p>
             </CardContent>
+          </TabsContent>
+
+          <TabsContent value="admin">
+            <form onSubmit={handleLogin}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Admin Email</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="admin-password">Password</Label>
+                    <a href="#" className="text-sm text-sishu-primary hover:underline">
+                      Forgot password?
+                    </a>
+                  </div>
+                  <Input
+                    id="admin-password"
+                    type="password" 
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col">
+                <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">Login as Admin</Button>
+              </CardFooter>
+            </form>
           </TabsContent>
         </Tabs>
       </Card>
