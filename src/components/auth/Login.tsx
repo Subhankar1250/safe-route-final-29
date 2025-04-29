@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,18 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Smartphone, Users, Settings, AlertCircle } from "lucide-react";
+import { Smartphone, Users, Settings, AlertCircle, ScanLine } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import QrScanner from './QrScanner';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"guardian" | "driver" | "admin">("guardian");
   const [error, setError] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     
@@ -28,22 +30,51 @@ const Login: React.FC = () => {
       return;
     }
     
-    // Here would go the actual auth logic with the generated credentials
     toast({
       title: "Logging in...",
       description: `Attempting to log in as ${role}`,
     });
     
-    // Simulate login and redirect
-    setTimeout(() => {
-      if (role === "guardian") {
-        navigate("/guardian/dashboard");
-      } else if (role === "driver") {
+    try {
+      // Here would go the actual auth logic when integrated with Supabase
+      // For now, let's keep the simulated login
+      setTimeout(() => {
+        if (role === "guardian") {
+          navigate("/guardian/dashboard");
+        } else if (role === "driver") {
+          navigate("/driver/dashboard");
+        } else if (role === "admin") {
+          navigate("/admin/dashboard");
+        }
+      }, 1500);
+    } catch (err) {
+      setError("Login failed. Please check your credentials.");
+      toast({
+        variant: "destructive",
+        title: "Login Error",
+        description: "Failed to authenticate. Please try again.",
+      });
+    }
+  };
+
+  const handleQrCodeScanned = (qrData: string) => {
+    setIsScanning(false);
+    
+    // Process the QR code data
+    if (qrData.startsWith('driver_')) {
+      toast({
+        title: "QR Code Detected",
+        description: "Authenticating with driver QR code...",
+      });
+      
+      // Here you would verify the QR code with your backend
+      // For now, navigate directly to the driver dashboard
+      setTimeout(() => {
         navigate("/driver/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin/dashboard");
-      }
-    }, 1500);
+      }, 1500);
+    } else {
+      setError("Invalid QR code. Please try again or use your credentials.");
+    }
   };
 
   return (
@@ -127,24 +158,50 @@ const Login: React.FC = () => {
                 <p className="text-sm text-muted-foreground">Scan the QR code provided by your administrator</p>
               </div>
               
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 w-48 h-48 mx-auto flex items-center justify-center">
-                <Button type="button" className="bg-sishu-primary hover:bg-blue-700">
-                  Scan QR Code
-                </Button>
-              </div>
+              {isScanning ? (
+                <div className="relative">
+                  <QrScanner 
+                    onScan={handleQrCodeScanned}
+                    onError={(error: Error) => {
+                      setError(error.message);
+                      setIsScanning(false);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="absolute top-2 right-2 rounded-full p-2"
+                    onClick={() => setIsScanning(false)}
+                  >
+                    &times;
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 w-48 h-48 mx-auto flex items-center justify-center">
+                  <Button 
+                    type="button" 
+                    className="bg-sishu-primary hover:bg-blue-700 flex items-center gap-2"
+                    onClick={() => setIsScanning(true)}
+                  >
+                    <ScanLine size={16} />
+                    Scan QR Code
+                  </Button>
+                </div>
+              )}
+              
+              {error && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               
               <p className="text-xs text-gray-500 text-center mt-4">
                 Having trouble scanning? Use your login credentials instead
               </p>
               
               <form onSubmit={handleLogin} className="mt-4 space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
                 <div className="space-y-2">
                   <Label htmlFor="driver-email">Email/Username</Label>
                   <Input
