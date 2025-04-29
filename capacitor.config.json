@@ -1,0 +1,10 @@
+
+{
+  "appId": "app.lovable.a2a1a8abfcb24d2e9493c430bd8da085",
+  "appName": "safe-route-guardian-mobile",
+  "webDir": "dist",
+  "server": {
+    "url": "https://a2a1a8ab-fcb2-4d2e-9493-c430bd8da085.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
