@@ -7,19 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Smartphone, Users, Settings } from "lucide-react";
+import { Smartphone, Users, Settings, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"guardian" | "driver" | "admin">("guardian");
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
-    // Here would go the actual auth logic
+    // Simple validation
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+    
+    // Here would go the actual auth logic with the generated credentials
     toast({
       title: "Logging in...",
       description: `Attempting to log in as ${role}`,
@@ -64,6 +73,13 @@ const Login: React.FC = () => {
           <TabsContent value="guardian">
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -105,27 +121,69 @@ const Login: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="driver">
-            <CardContent className="space-y-4 flex flex-col items-center">
+            <CardContent className="space-y-4">
               <div className="text-center mb-4">
                 <p className="font-medium">Login with your QR Code</p>
                 <p className="text-sm text-muted-foreground">Scan the QR code provided by your administrator</p>
               </div>
               
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 w-48 h-48 flex items-center justify-center">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 w-48 h-48 mx-auto flex items-center justify-center">
                 <Button type="button" className="bg-sishu-primary hover:bg-blue-700">
                   Scan QR Code
                 </Button>
               </div>
               
               <p className="text-xs text-gray-500 text-center mt-4">
-                Having trouble scanning? Contact your school administrator
+                Having trouble scanning? Use your login credentials instead
               </p>
+              
+              <form onSubmit={handleLogin} className="mt-4 space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="driver-email">Email/Username</Label>
+                  <Input
+                    id="driver-email"
+                    type="email"
+                    placeholder="email@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="driver-password">Password</Label>
+                  <Input
+                    id="driver-password"
+                    type="password" 
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
+                  Login with Credentials
+                </Button>
+              </form>
             </CardContent>
           </TabsContent>
 
           <TabsContent value="admin">
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="admin-email">Admin Email</Label>
                   <Input

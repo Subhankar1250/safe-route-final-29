@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { 
-  Users, File, Map, Clock, Settings, Database
+  Users, File, Map, Clock, Settings, Database, Key
 } from 'lucide-react';
 
 import AdminDrivers from './AdminDrivers';
@@ -14,6 +14,7 @@ import AdminGuardians from './AdminGuardians';
 import AdminLocations from './AdminLocations';
 import AdminQRCode from './AdminQRCode';
 import AdminHistory from './AdminHistory';
+import CredentialGenerator from './credentials/CredentialGenerator';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center p-4 h-24"
@@ -96,6 +97,15 @@ const AdminDashboard: React.FC = () => {
             <File className="h-6 w-6 mb-2" />
             <span>QR Codes</span>
           </Button>
+
+          <Button 
+            variant="outline" 
+            className="flex flex-col items-center justify-center p-4 h-24"
+            onClick={() => navigate('/admin/credentials')}
+          >
+            <Key className="h-6 w-6 mb-2" />
+            <span>Credentials</span>
+          </Button>
         </div>
 
         <Card className="p-6">
@@ -108,6 +118,7 @@ const AdminDashboard: React.FC = () => {
             <Route path="/locations" element={<AdminLocations />} />
             <Route path="/history" element={<AdminHistory />} />
             <Route path="/qrcode" element={<AdminQRCode />} />
+            <Route path="/credentials" element={<CredentialGenerator />} />
           </Routes>
         </Card>
       </div>
