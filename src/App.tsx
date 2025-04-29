@@ -8,22 +8,25 @@ import Login from "./components/auth/Login";
 import GuardianDashboard from "./components/guardian/GuardianDashboard";
 import DriverDashboard from "./components/driver/DriverDashboard";
 import NotFound from "./pages/NotFound";
+import { FirebaseProvider } from "./contexts/FirebaseContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
-        <Route path="/driver/dashboard" element={<DriverDashboard />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
+    <FirebaseProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
+          <Route path="/driver/dashboard" element={<DriverDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </FirebaseProvider>
   </QueryClientProvider>
 );
 
