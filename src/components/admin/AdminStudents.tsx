@@ -199,7 +199,7 @@ const AdminStudents: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="driver">Assign Driver</Label>
                   <Select 
-                    value={newStudent.driverId} 
+                    value={newStudent.driverId || undefined} 
                     onValueChange={handleDriverChange}
                   >
                     <SelectTrigger id="driver">
