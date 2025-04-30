@@ -4,6 +4,7 @@ import {
   User, signInWithEmailAndPassword, createUserWithEmailAndPassword, 
   signOut, onAuthStateChanged, sendPasswordResetEmail 
 } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useFirebase } from './FirebaseContext';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -115,9 +116,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Update user role function
   const updateUserRole = async (uid: string, role: string) => {
     try {
-      // In Firebase, we'd typically store user roles in Firestore
-      // This is a client-side implementation - in production, this should be a secured admin API
-      await firestore.collection('user_roles').doc(uid).set({ role });
+      // Updated to use Firebase v9 modular API
+      await setDoc(doc(firestore, 'user_roles', uid), { role });
       toast({
         title: "Role updated",
         description: `User role updated to ${role}.`,
