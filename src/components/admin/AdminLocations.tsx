@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LiveMapbox from '@/components/map/LiveMapbox';
+import LiveOpenLayersMap from '@/components/map/LiveOpenLayersMap';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 
@@ -48,7 +48,7 @@ const AdminLocations: React.FC = () => {
         </TabsList>
         
         <TabsContent value="map" className="pt-4">
-          <LiveMapbox busFilter={selectedBus} />
+          <LiveOpenLayersMap selectedBusId={selectedBus} />
         </TabsContent>
         
         <TabsContent value="list" className="pt-4">

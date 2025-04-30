@@ -55,6 +55,7 @@
     "lucide-react": "^0.462.0",
     "mapbox-gl": "^3.11.1",
     "next-themes": "^0.3.0",
+    "ol": "^10.5.0",
     "qrcode.js": "^0.0.1",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
