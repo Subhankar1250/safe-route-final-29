@@ -9,6 +9,7 @@ import Feature from 'ol/Feature';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { BusMarkerProps, createBusMarker } from './BusMarker';
+import { MAP_CONFIG } from './mapConfig';
 
 interface OpenLayersMapProps {
   busLocations: BusMarkerProps[];
@@ -45,20 +46,25 @@ const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
       mapObject.current = new Map({
         target: mapRef.current,
         layers: [
-          // Base OSM layer
+          // Base OSM layer with proper attribution
           new TileLayer({
-            source: new OSM()
+            source: new OSM({
+              attributions: MAP_CONFIG.attribution
+            })
           }),
           // Vector layer for markers
           vectorLayer
         ],
         view: new View({
-          center: fromLonLat([-122.4194, 37.7749]), // San Francisco
-          zoom: 12
+          center: fromLonLat(MAP_CONFIG.defaultCenter), 
+          zoom: MAP_CONFIG.defaultZoom,
+          minZoom: MAP_CONFIG.minZoom,
+          maxZoom: MAP_CONFIG.maxZoom
         })
       });
 
       setMapLoaded(true);
+      console.log('Map initialization successful');
       
     } catch (err) {
       console.error('Error initializing map:', err);
@@ -101,7 +107,7 @@ const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
         view.animate({
           center: fromLonLat([bus.position.longitude, bus.position.latitude]),
           zoom: 14,
-          duration: 1000
+          duration: MAP_CONFIG.animationDuration
         });
       } else {
         // Calculate extent to fit all buses
@@ -109,7 +115,7 @@ const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
         mapObject.current.getView().fit(vectorSourceRef.current.getExtent(), {
           padding: [50, 50, 50, 50],
           maxZoom: 15,
-          duration: 1000
+          duration: MAP_CONFIG.animationDuration
         });
       }
     }
@@ -120,9 +126,9 @@ const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
     if (!mapObject.current) return;
     
     mapObject.current.getView().animate({
-      center: fromLonLat([-122.4194, 37.7749]),
-      zoom: 12,
-      duration: 1000
+      center: fromLonLat(MAP_CONFIG.defaultCenter),
+      zoom: MAP_CONFIG.defaultZoom,
+      duration: MAP_CONFIG.animationDuration
     });
   };
 

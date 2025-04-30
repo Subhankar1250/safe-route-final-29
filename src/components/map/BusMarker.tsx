@@ -3,6 +3,7 @@ import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { Icon, Style } from 'ol/style';
 import { fromLonLat } from 'ol/proj';
+import { MAP_CONFIG } from './mapConfig';
 
 export interface BusMarkerProps {
   id: string;
@@ -32,8 +33,8 @@ export const createBusMarker = (bus: BusMarkerProps): Feature => {
   // Style the feature with a bus icon
   feature.setStyle(new Style({
     image: new Icon({
-      src: '/bus-icon.svg',
-      scale: 0.5,
+      src: MAP_CONFIG.busIconPath,
+      scale: MAP_CONFIG.busMarkerScale,
       anchor: [0.5, 0.5]
     })
   }));
