@@ -77,6 +77,22 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleScannerError = (error: Error) => {
+    setError(`Scanner error: ${error.message}`);
+    toast({
+      variant: "destructive",
+      title: "Scanner Error",
+      description: error.message,
+    });
+  };
+
+  const toggleScanner = () => {
+    setIsScanning(!isScanning);
+    if (isScanning) {
+      setError(null); // Clear any previous errors when closing
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-md mx-auto">
@@ -162,16 +178,13 @@ const Login: React.FC = () => {
                 <div className="relative">
                   <QrScanner 
                     onScan={handleQrCodeScanned}
-                    onError={(error: Error) => {
-                      setError(error.message);
-                      setIsScanning(false);
-                    }}
+                    onError={handleScannerError}
                   />
                   <Button
                     type="button"
                     variant="outline"
                     className="absolute top-2 right-2 rounded-full p-2"
-                    onClick={() => setIsScanning(false)}
+                    onClick={toggleScanner}
                   >
                     &times;
                   </Button>
@@ -181,7 +194,7 @@ const Login: React.FC = () => {
                   <Button 
                     type="button" 
                     className="bg-sishu-primary hover:bg-blue-700 flex items-center gap-2"
-                    onClick={() => setIsScanning(true)}
+                    onClick={toggleScanner}
                   >
                     <ScanLine size={16} />
                     Scan QR Code
