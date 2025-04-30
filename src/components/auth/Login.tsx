@@ -85,7 +85,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
@@ -144,6 +144,26 @@ const Login: React.FC = () => {
           </TabsContent>
         </Tabs>
       </Card>
+      
+      {/* Scrolling Footer Text */}
+      <div className="w-full max-w-md mt-4 overflow-hidden bg-sishu-primary text-white rounded-md">
+        <div className="scrolling-text py-2">
+          Developed By : The Phoenix Devs. Created By : Subhankar Ghorui
+        </div>
+      </div>
+      
+      <style jsx>{`
+        .scrolling-text {
+          white-space: nowrap;
+          overflow: hidden;
+          animation: scroll-text 15s linear infinite;
+        }
+        
+        @keyframes scroll-text {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+      `}</style>
     </div>
   );
 };
