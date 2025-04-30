@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { 
-  Users, File, Map, Clock, Settings, Database, Key
+  Users, File, Map, Clock, Settings, Database, Key, UserCircle
 } from 'lucide-react';
 
 import AdminDrivers from './AdminDrivers';
@@ -15,16 +15,35 @@ import AdminLocations from './AdminLocations';
 import AdminQRCode from './AdminQRCode';
 import AdminHistory from './AdminHistory';
 import CredentialGenerator from './credentials/CredentialGenerator';
+import AdminProfile from './AdminProfile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [user] = useState({ name: 'Admin User' });
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-sishu-primary text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Sishu Tirtha Admin Panel</h1>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/5660de73-133f-4d61-aa57-08b2be7b455d.png" 
+              alt="Sishu Tirtha Safe Route" 
+              className="h-10 w-10" 
+            />
+            <h1 className="text-xl font-bold">Sishu Tirtha Admin Panel</h1>
+          </div>
           <div className="flex items-center space-x-4">
             <span>{user.name}</span>
             <Menubar className="border-none bg-transparent">
@@ -33,8 +52,8 @@ const AdminDashboard: React.FC = () => {
                   <Settings className="h-5 w-5" />
                 </MenubarTrigger>
                 <MenubarContent>
-                  <MenubarItem onClick={() => navigate('/login')}>Logout</MenubarItem>
-                  <MenubarItem>Settings</MenubarItem>
+                  <MenubarItem onClick={() => navigate('/admin/profile')}>My Profile</MenubarItem>
+                  <MenubarItem onClick={handleLogout}>Logout</MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
             </Menubar>
@@ -43,7 +62,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-8">
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center p-4 h-24"
@@ -106,6 +125,15 @@ const AdminDashboard: React.FC = () => {
             <Key className="h-6 w-6 mb-2" />
             <span>Credentials</span>
           </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col items-center justify-center p-4 h-24"
+            onClick={() => navigate('/admin/profile')}
+          >
+            <UserCircle className="h-6 w-6 mb-2" />
+            <span>My Profile</span>
+          </Button>
         </div>
 
         <Card className="p-6">
@@ -119,6 +147,7 @@ const AdminDashboard: React.FC = () => {
             <Route path="/history" element={<AdminHistory />} />
             <Route path="/qrcode" element={<AdminQRCode />} />
             <Route path="/credentials" element={<CredentialGenerator />} />
+            <Route path="/profile" element={<AdminProfile />} />
           </Routes>
         </Card>
       </div>

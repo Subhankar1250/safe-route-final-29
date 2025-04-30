@@ -5,10 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Smartphone, Users, Settings, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import GuardianLoginTab from './GuardianLoginTab';
 import DriverLoginTab from './DriverLoginTab';
 import AdminLoginTab from './AdminLoginTab';
+import { useAuth } from '@/contexts/AuthContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useFirebase } from '@/contexts/FirebaseContext';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -17,6 +20,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { auth, firestore } = useFirebase();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,20 +38,52 @@ const Login: React.FC = () => {
     });
     
     try {
-      // Here would be the actual auth logic when integrated with Supabase
-      // We'll use JWT with username-password authentication
+      // Convert username to email format for Firebase Auth
+      // This is just for demonstration - in a real app, you might have a different strategy
+      const email = `${username.toLowerCase()}@sishu-tirtha.app`;
       
-      // Simulated login for now
-      setTimeout(() => {
-        if (role === "guardian") {
-          navigate("/guardian/dashboard");
-        } else if (role === "driver") {
-          navigate("/driver/dashboard");
-        } else if (role === "admin") {
-          navigate("/admin/dashboard");
-        }
-      }, 1500);
+      // Firebase Authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Check user role in Firestore
+      const userRoleQuery = query(
+        collection(firestore, "users"),
+        where("uid", "==", user.uid)
+      );
+      
+      const querySnapshot = await getDocs(userRoleQuery);
+      
+      if (querySnapshot.empty) {
+        throw new Error("User role not found");
+      }
+      
+      const userData = querySnapshot.docs[0].data();
+      const userRole = userData.role;
+      
+      // Validate correct role was selected
+      if (userRole !== role) {
+        setError(`You are not authorized as a ${role}. Please select the correct role.`);
+        await auth.signOut();
+        return;
+      }
+      
+      // Navigate based on role
+      if (role === "guardian") {
+        navigate("/guardian/dashboard");
+      } else if (role === "driver") {
+        navigate("/driver/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
+      }
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userData.name || username}!`,
+      });
+      
     } catch (err) {
+      console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
       toast({
         variant: "destructive",
@@ -57,7 +93,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleQrCodeScanned = (qrData: string) => {
+  const handleQrCodeScanned = async (qrData: string) => {
     // Process the QR code data
     if (qrData.startsWith('driver_')) {
       toast({
@@ -65,11 +101,39 @@ const Login: React.FC = () => {
         description: "Authenticating with driver QR code...",
       });
       
-      // Here you would verify the QR code with your backend
-      // For now, navigate directly to the driver dashboard
-      setTimeout(() => {
+      try {
+        // Here you would verify the QR code with your backend/Firebase
+        // For demonstration:
+        const driverId = qrData.replace('driver_', '');
+        
+        // Query Firestore for this driver
+        const driverQuery = query(
+          collection(firestore, "users"),
+          where("driverId", "==", driverId),
+          where("role", "==", "driver")
+        );
+        
+        const querySnapshot = await getDocs(driverQuery);
+        
+        if (querySnapshot.empty) {
+          throw new Error("Driver not found");
+        }
+        
+        // Auto login the driver
         navigate("/driver/dashboard");
-      }, 1500);
+        
+        toast({
+          title: "QR Login successful",
+          description: "Welcome back!",
+        });
+      } catch (error) {
+        setError("Invalid QR code. Please try again or use your credentials.");
+        toast({
+          variant: "destructive",
+          title: "QR Authentication Failed",
+          description: "Could not authenticate with QR code.",
+        });
+      }
     } else {
       setError("Invalid QR code. Please try again or use your credentials.");
     }
