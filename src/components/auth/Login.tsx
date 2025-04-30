@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -88,9 +89,13 @@ const Login: React.FC = () => {
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <img src="/logo-placeholder.svg" alt="Sishu Tirtha Safe Route" className="h-16 w-16" />
+            <img 
+              src="/lovable-uploads/5660de73-133f-4d61-aa57-08b2be7b455d.png" 
+              alt="Sishu Tirtha Safe Route" 
+              className="h-24 w-24" 
+            />
           </div>
-          <CardTitle className="text-2xl font-bold text-sishu-primary">Sishu Tirtha Safe Route</CardTitle>
+          <CardTitle className="text-2xl font-bold text-sishu-blue">Sishu Tirtha Safe Route</CardTitle>
           <CardDescription>The safest route for your child's journey</CardDescription>
         </CardHeader>
         
@@ -145,7 +150,7 @@ const Login: React.FC = () => {
       </Card>
       
       {/* Fixed Footer Text */}
-      <div className="w-full max-w-md mt-4 bg-sishu-primary text-white rounded-md p-2 text-center">
+      <div className="w-full max-w-md mt-4 bg-sishu-blue text-white rounded-md p-2 text-center">
         <p className="text-sm">Developed By : The Phoenix Devs.</p>
         <p className="text-sm">Created By : Subhankar Ghorui</p>
       </div>

@@ -14,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 210 79% 46%;
+    --primary: 215 65% 34%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 120 43% 49%;
+    --secondary: 78 60% 52%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 36 100% 50%;
+    --accent: 340 76% 55%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -55,16 +55,16 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 79% 46%;
+    --primary: 215 65% 34%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 120 43% 49%;
+    --secondary: 78 60% 52%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 36 100% 50%;
+    --accent: 340 76% 55%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -102,14 +102,14 @@
   }
 
   .sishu-button-primary {
-    @apply bg-sishu-primary text-white rounded-lg py-2 px-4 font-medium hover:bg-blue-700 transition-colors;
+    @apply bg-sishu-blue text-white rounded-lg py-2 px-4 font-medium hover:bg-blue-700 transition-colors;
   }
 
   .sishu-button-secondary {
-    @apply bg-sishu-secondary text-white rounded-lg py-2 px-4 font-medium hover:bg-green-600 transition-colors;
+    @apply bg-sishu-green text-sishu-dark rounded-lg py-2 px-4 font-medium hover:bg-green-600 transition-colors;
   }
 
   .sishu-input {
-    @apply rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sishu-primary;
+    @apply rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sishu-blue;
   }
 }
