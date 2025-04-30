@@ -38,7 +38,7 @@ const LiveOpenLayersMap: React.FC<LiveOpenLayersMapProps> = ({ selectedBusId }) 
   const mapObject = useRef<Map | null>(null);
   const [busLocations, setBusLocations] = useState<BusLocation[]>([]);
   const [routes, setRoutes] = useState<{ id: string; name: string }[]>([]);
-  const [selectedRoute, setSelectedRoute] = useState<string>('');
+  const [selectedRoute, setSelectedRoute] = useState<string>("all"); // Changed from empty string to "all"
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const markersRef = useRef<{ [key: string]: Feature }>({});
@@ -234,7 +234,7 @@ const LiveOpenLayersMap: React.FC<LiveOpenLayersMapProps> = ({ selectedBusId }) 
                 <SelectValue placeholder="All routes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All routes</SelectItem>
+                <SelectItem value="all">All routes</SelectItem>
                 {routes.map(route => (
                   <SelectItem key={route.id} value={route.id}>
                     {route.name}

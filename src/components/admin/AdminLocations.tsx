@@ -12,7 +12,7 @@ const buses = [
 ];
 
 const AdminLocations: React.FC = () => {
-  const [selectedBus, setSelectedBus] = useState<string | undefined>(undefined);
+  const [selectedBus, setSelectedBus] = useState<string>("all"); // Changed from undefined to "all"
   
   return (
     <div className="space-y-4">
