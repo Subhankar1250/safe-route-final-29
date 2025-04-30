@@ -1,10 +1,23 @@
 
 {
   "appId": "app.lovable.a2a1a8abfcb24d2e9493c430bd8da085",
-  "appName": "safe-route-guardian-mobile",
+  "appName": "Sishu Tirtha Safe Route",
   "webDir": "dist",
   "server": {
     "url": "https://a2a1a8ab-fcb2-4d2e-9493-c430bd8da085.lovableproject.com?forceHideBadge=true",
     "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "backgroundColor": "#1976D2",
+      "androidSplashResourceName": "splash",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  },
+  "android": {
+    "backgroundColor": "#ffffff"
   }
 }

@@ -1,196 +1,171 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, BellRing, School, Home } from "lucide-react";
-import LiveMap from '@/components/map/LiveMap';
-import { useToast } from '@/components/ui/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { MapPin, Clock, User, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import LiveBusLocation from './LiveBusLocation';
 
-// Simulated child data
-const childrenData = [
-  { 
-    id: 1, 
-    name: "Rahul",
-    busNumber: "ST-123",
-    driverName: "Amit Kumar",
-    status: "in-transit", // in-transit, arrived-school, arrived-home
-    estimatedArrival: "8:45 AM",
-    currentLocation: "Rajpur Road, near Gandhi Park"
-  },
-  { 
-    id: 2, 
-    name: "Priya",
-    busNumber: "ST-456",
-    driverName: "Rajesh Singh",
-    status: "arrived-school",
-    estimatedArrival: "Already arrived",
-    currentLocation: "School Campus"
-  }
-];
-
-const StatusIndicator: React.FC<{ status: string }> = ({ status }) => {
-  const getStatusColor = () => {
-    switch(status) {
-      case 'in-transit': return 'bg-sishu-accent';
-      case 'arrived-school': return 'bg-sishu-secondary';
-      case 'arrived-home': return 'bg-sishu-primary';
-      default: return 'bg-gray-400';
-    }
+interface StudentInfo {
+  id: string;
+  name: string;
+  grade: string;
+  busNumber: string;
+  driverName: string;
+  isOnBus: boolean;
+  lastCheckIn?: string;
+  lastCheckOut?: string;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    lastUpdated: string;
   };
-  
-  const getStatusText = () => {
-    switch(status) {
-      case 'in-transit': return 'In Transit';
-      case 'arrived-school': return 'At School';
-      case 'arrived-home': return 'At Home';
-      default: return 'Unknown';
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`${getStatusColor()} h-3 w-3 rounded-full animate-pulse-slow`}></span>
-      <span className="text-sm font-medium">{getStatusText()}</span>
-    </div>
-  );
-};
+  estimatedArrival?: string;
+}
 
 const GuardianDashboard: React.FC = () => {
-  const [selectedChildId, setSelectedChildId] = useState(childrenData[0].id);
-  const selectedChild = childrenData.find(child => child.id === selectedChildId) || childrenData[0];
+  const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const showNotificationDemo = () => {
+
+  // Simulated data fetch - in a real app would connect to Supabase
+  useEffect(() => {
+    // Simulate API call delay
+    const timer = setTimeout(() => {
+      // Mock student data - in a real app, this would come from Supabase
+      // based on the logged-in guardian's account
+      const mockStudent: StudentInfo = {
+        id: '1',
+        name: 'Alice Johnson',
+        grade: '3A',
+        busNumber: 'BUS001',
+        driverName: 'John Doe',
+        isOnBus: true,
+        lastCheckIn: '07:45 AM',
+        currentLocation: {
+          latitude: 37.7749,
+          longitude: -122.4194,
+          lastUpdated: new Date().toLocaleTimeString()
+        },
+        estimatedArrival: '08:15 AM'
+      };
+      
+      setStudent(mockStudent);
+      setLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleLogout = () => {
+    // Here would be the actual logout logic when integrated with Supabase
     toast({
-      title: "Bus Update",
-      description: `${selectedChild.name}'s bus has left the school. Estimated arrival: 4:15 PM.`,
-      duration: 5000,
+      title: "Logging out",
+      description: "You have been successfully logged out.",
     });
+    navigate("/login");
   };
-  
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-sishu-primary">Guardian Dashboard</h1>
-        <p className="text-muted-foreground">Track your child's journey in real-time</p>
-      </header>
-      
-      {childrenData.length > 1 && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Select Child</label>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {childrenData.map(child => (
-              <Button
-                key={child.id}
-                variant={selectedChildId === child.id ? "default" : "outline"}
-                onClick={() => setSelectedChildId(child.id)}
-                className={selectedChildId === child.id ? "bg-sishu-primary" : ""}
-              >
-                {child.name}
-              </Button>
-            ))}
-          </div>
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sishu-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading student information...</p>
         </div>
-      )}
-      
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>{selectedChild.name}'s Transport</CardTitle>
-              <CardDescription>Bus #{selectedChild.busNumber} • Driver: {selectedChild.driverName}</CardDescription>
-            </div>
-            <StatusIndicator status={selectedChild.status} />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-3">
-              <div className="bg-sishu-primary/10 p-2 rounded-full">
-                <MapPin className="h-5 w-5 text-sishu-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Current Location</p>
-                <p className="text-sm text-muted-foreground">{selectedChild.currentLocation}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-sishu-accent/10 p-2 rounded-full">
-                <Clock className="h-5 w-5 text-sishu-accent" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Estimated Arrival</p>
-                <p className="text-sm text-muted-foreground">{selectedChild.estimatedArrival}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="h-[400px] mb-6 rounded-xl overflow-hidden border">
-        <LiveMap childId={selectedChild.id} />
       </div>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Journey Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="morning">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="morning" className="flex items-center gap-2">
-                <Home size={16} /> Morning Trip
-              </TabsTrigger>
-              <TabsTrigger value="afternoon" className="flex items-center gap-2">
-                <School size={16} /> Afternoon Trip
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="morning">
-              <div className="space-y-4">
-                <div className="border-l-2 border-sishu-secondary pl-4 py-2">
-                  <p className="text-sm font-medium">Pick-up Time</p>
-                  <p className="text-sm text-muted-foreground">8:15 AM</p>
-                </div>
-                <div className="border-l-2 border-sishu-secondary pl-4 py-2">
-                  <p className="text-sm font-medium">Estimated School Arrival</p>
-                  <p className="text-sm text-muted-foreground">8:45 AM</p>
-                </div>
-                <div className="border-l-2 border-sishu-secondary pl-4 py-2">
-                  <p className="text-sm font-medium">Total Distance</p>
-                  <p className="text-sm text-muted-foreground">4.2 km</p>
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="afternoon">
-              <div className="space-y-4">
-                <div className="border-l-2 border-sishu-primary pl-4 py-2">
-                  <p className="text-sm font-medium">School Departure</p>
-                  <p className="text-sm text-muted-foreground">4:00 PM</p>
-                </div>
-                <div className="border-l-2 border-sishu-primary pl-4 py-2">
-                  <p className="text-sm font-medium">Estimated Home Arrival</p>
-                  <p className="text-sm text-muted-foreground">4:30 PM</p>
-                </div>
-                <div className="border-l-2 border-sishu-primary pl-4 py-2">
-                  <p className="text-sm font-medium">Total Distance</p>
-                  <p className="text-sm text-muted-foreground">4.2 km</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center gap-2" 
-            onClick={showNotificationDemo}
-          >
-            <BellRing size={16} />
-            Show Notification Demo
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-sishu-primary text-white p-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold">Sishu Tirtha - Guardian View</h1>
+          <Button variant="ghost" onClick={handleLogout} className="text-white">
+            <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
+
+      <div className="container mx-auto p-4">
+        {student ? (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl flex items-center">
+                  <User className="mr-2 h-5 w-5" /> {student.name} - {student.grade}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Bus Number</p>
+                    <p className="font-medium">{student.busNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Driver</p>
+                    <p className="font-medium">{student.driverName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <p className="font-medium">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${student.isOnBus ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                      {student.isOnBus ? 'Currently on bus' : 'Not on bus'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Last Check-in</p>
+                    <p className="font-medium">{student.lastCheckIn || 'N/A'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {student.isOnBus && student.currentLocation && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl flex items-center">
+                    <MapPin className="mr-2 h-5 w-5" /> Live Bus Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-500">Last Updated</p>
+                    <p className="font-medium">{student.currentLocation.lastUpdated}</p>
+                  </div>
+                  
+                  <div className="aspect-video w-full h-64 bg-gray-100 rounded-md overflow-hidden">
+                    <LiveBusLocation 
+                      latitude={student.currentLocation.latitude}
+                      longitude={student.currentLocation.longitude}
+                      busNumber={student.busNumber}
+                    />
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-gray-500">Estimated Arrival</p>
+                      <p className="font-medium flex items-center">
+                        <Clock className="mr-2 h-4 w-4" /> {student.estimatedArrival || 'Calculating...'}
+                      </p>
+                    </div>
+                    <Button variant="outline" className="text-sishu-primary border-sishu-primary">
+                      Get Directions
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500">No student information found.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

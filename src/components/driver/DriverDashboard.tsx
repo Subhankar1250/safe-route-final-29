@@ -1,14 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Clock, Route, User, Users } from "lucide-react";
+import { MapPin, Clock, Route, User, Users, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import StudentCheckList from './StudentCheckList';
+import { supabase } from '@/integrations/supabase/client';
 
 const DriverDashboard: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [tripStartTime, setTripStartTime] = useState<Date | null>(null);
   const [elapsed, setElapsed] = useState('00:00:00');
+  const [location, setLocation] = useState<GeolocationPosition | null>(null);
+  const [watchId, setWatchId] = useState<number | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Simulated trip data
@@ -46,167 +52,197 @@ const DriverDashboard: React.FC = () => {
     setIsActive(true);
     setTripStartTime(new Date());
     
+    // Start tracking location
+    if (navigator.geolocation) {
+      const id = navigator.geolocation.watchPosition(
+        position => {
+          setLocation(position);
+          sendLocationUpdate(position);
+        },
+        error => {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location Error",
+            description: `Failed to get location: ${error.message}`,
+            variant: "destructive",
+          });
+        },
+        { 
+          enableHighAccuracy: true, 
+          maximumAge: 10000,
+          timeout: 5000 
+        }
+      );
+      
+      setWatchId(id);
+    } else {
+      toast({
+        title: "Location Not Available",
+        description: "Geolocation is not supported by this browser.",
+        variant: "destructive",
+      });
+    }
+    
     toast({
       title: "Trip Started",
       description: "Location tracking is now active.",
       duration: 3000,
     });
-    
-    // Simulate periodic location updates
-    const mockLocationUpdate = () => {
-      console.log("Sending location update...");
-      // Here we would send the location to Firebase
-    };
-    
-    // Set up periodic updates every 10 seconds
-    setInterval(mockLocationUpdate, 10000);
   };
 
   const handleEndTrip = () => {
     setIsActive(false);
     
+    // Stop tracking location
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    
     toast({
       title: "Trip Ended",
-      description: "Location tracking has been stopped.",
+      description: `Total trip time: ${elapsed}`,
       duration: 3000,
     });
   };
 
+  const sendLocationUpdate = async (position: GeolocationPosition) => {
+    const { latitude, longitude } = position.coords;
+    
+    console.log(`Sending location update: ${latitude}, ${longitude}`);
+    
+    // In a real app, this would send the data to Supabase
+    try {
+      // Example of how this would work with Supabase
+      // await supabase.from('bus_locations').upsert({
+      //   bus_number: 'BUS001',
+      //   driver_id: 'current_driver_id',
+      //   latitude,
+      //   longitude,
+      //   timestamp: new Date().toISOString(),
+      //   is_active: true
+      // });
+    } catch (error) {
+      console.error('Error updating location:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    // If tracking is active, stop it
+    if (isActive && watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+    
+    // Here would be the actual logout logic when integrated with Supabase
+    toast({
+      title: "Logging out",
+      description: "You have been successfully logged out.",
+    });
+    
+    navigate("/login");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-sishu-primary">Driver Dashboard</h1>
-        <p className="text-muted-foreground">Manage your school transport route</p>
-      </header>
-      
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle>{tripData.route}</CardTitle>
-            {isActive && (
-              <div className="bg-sishu-accent/10 px-3 py-1 rounded-full flex items-center gap-2">
-                <span className="h-2 w-2 bg-sishu-accent rounded-full animate-pulse"></span>
-                <span className="text-sm font-medium text-sishu-accent">Trip Active</span>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-sishu-primary/10 p-2 rounded-full">
-                <Users className="h-5 w-5 text-sishu-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Students</p>
-                <p className="text-sm text-muted-foreground">{tripData.students} assigned</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-sishu-secondary/10 p-2 rounded-full">
-                <Route className="h-5 w-5 text-sishu-secondary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Stops</p>
-                <p className="text-sm text-muted-foreground">{tripData.stops} stops</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {isActive ? (
-        <Card className="mb-6 border-sishu-secondary border-2">
-          <CardHeader className="pb-2 bg-sishu-secondary/5">
-            <CardTitle className="flex items-center justify-between">
-              <span>Trip in Progress</span>
-              <span className="text-sishu-secondary">{elapsed}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-sishu-accent/10 p-2 rounded-full">
-                  <MapPin className="h-5 w-5 text-sishu-accent" />
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-sishu-primary text-white p-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold">Sishu Tirtha - Driver Dashboard</h1>
+          <Button variant="ghost" onClick={handleLogout} className="text-white">
+            <LogOut className="mr-2 h-4 w-4" /> Logout
+          </Button>
+        </div>
+      </div>
+
+      <div className="container mx-auto p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Trip Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-500">Current Route</p>
+                  <p className="font-medium flex items-center">
+                    <Route className="mr-2 h-4 w-4" /> {tripData.route}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Students</p>
+                    <p className="font-medium">{tripData.students}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Total Stops</p>
+                    <p className="font-medium">{tripData.stops}</p>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Next Stop</p>
-                  <p className="text-sm text-muted-foreground">{tripData.nextStop}</p>
+                  <p className="text-sm text-gray-500">Next Stop</p>
+                  <p className="font-medium">{tripData.nextStop}</p>
+                  <p className="text-sm text-sishu-primary">ETA: {tripData.etaNextStop}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-sishu-primary/10 p-2 rounded-full">
-                  <Clock className="h-5 w-5 text-sishu-primary" />
-                </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Tracking Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium">ETA</p>
-                  <p className="text-sm text-muted-foreground">{tripData.etaNextStop}</p>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-medium flex items-center">
+                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                    {isActive ? 'Trip in progress' : 'Not started'}
+                  </p>
+                </div>
+                {isActive && (
+                  <>
+                    <div>
+                      <p className="text-sm text-gray-500">Trip Time</p>
+                      <p className="font-medium flex items-center">
+                        <Clock className="mr-2 h-4 w-4" /> {elapsed}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">GPS Location</p>
+                      <p className="font-medium flex items-center">
+                        <MapPin className="mr-2 h-4 w-4" /> 
+                        {location ? 
+                          `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}` : 
+                          'Acquiring...'}
+                      </p>
+                    </div>
+                  </>
+                )}
+                <div className="pt-2">
+                  {!isActive ? (
+                    <Button 
+                      className="w-full bg-sishu-primary hover:bg-blue-700" 
+                      onClick={handleStartTrip}
+                    >
+                      Start Trip
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="destructive" 
+                      className="w-full" 
+                      onClick={handleEndTrip}
+                    >
+                      End Trip
+                    </Button>
+                  )}
                 </div>
               </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              className="w-full bg-sishu-danger hover:bg-red-500" 
-              onClick={handleEndTrip}
-            >
-              End Trip
-            </Button>
-          </CardFooter>
-        </Card>
-      ) : (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Start a New Trip</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Start your trip to begin real-time location tracking. Your route information will be 
-              shared with guardians of assigned students.
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-sishu-primary/10 p-2 rounded-full">
-                  <Clock className="h-5 w-5 text-sishu-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Estimated Duration</p>
-                  <p className="text-sm text-muted-foreground">{tripData.estimatedDuration}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              className="w-full bg-sishu-secondary hover:bg-green-600" 
-              onClick={handleStartTrip}
-            >
-              Start Trip
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Driver Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="bg-gray-200 dark:bg-gray-700 h-16 w-16 rounded-full flex items-center justify-center">
-              <User className="h-8 w-8 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div>
-              <h3 className="font-medium">Rahul Singh</h3>
-              <p className="text-sm text-muted-foreground">ID: DRV-2023-142</p>
-              <p className="text-sm text-muted-foreground">Vehicle: ST-123</p>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button variant="outline" className="w-full">View Profile</Button>
-        </CardFooter>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+
+        <StudentCheckList isActive={isActive} />
+      </div>
     </div>
   );
 };

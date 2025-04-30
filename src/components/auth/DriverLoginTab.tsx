@@ -8,9 +8,9 @@ import ErrorAlert from './ErrorAlert';
 import QrScanner from './QrScanner';
 
 interface DriverLoginTabProps {
-  email: string;
+  username: string;
   password: string;
-  setEmail: (email: string) => void;
+  setUsername: (username: string) => void;
   setPassword: (password: string) => void;
   handleLogin: (e: React.FormEvent) => void;
   error: string | null;
@@ -19,9 +19,9 @@ interface DriverLoginTabProps {
 }
 
 const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
-  email,
+  username,
   password,
-  setEmail,
+  setUsername,
   setPassword,
   handleLogin,
   error,
@@ -77,9 +77,9 @@ const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
       
       <form onSubmit={handleLogin} className="mt-4 space-y-4">
         <LoginCredentialFields 
-          email={email}
+          username={username}
           password={password}
-          setEmail={setEmail}
+          setUsername={setUsername}
           setPassword={setPassword}
           forgotPasswordLink={false}
         />

@@ -4,31 +4,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface LoginCredentialFieldsProps {
-  email: string;
+  username: string;
   password: string;
-  setEmail: (email: string) => void;
+  setUsername: (username: string) => void;
   setPassword: (password: string) => void;
   forgotPasswordLink?: boolean;
 }
 
 const LoginCredentialFields: React.FC<LoginCredentialFieldsProps> = ({
-  email,
+  username,
   password,
-  setEmail,
+  setUsername,
   setPassword,
   forgotPasswordLink = true
 }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="username">Username</Label>
         <Input
-          id="email"
-          type="email"
-          placeholder="email@example.com"
+          id="username"
+          type="text"
+          placeholder="Enter your username"
           required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
       </div>
       <div className="space-y-2">

@@ -6,18 +6,18 @@ import LoginCredentialFields from './LoginCredentialFields';
 import ErrorAlert from './ErrorAlert';
 
 interface GuardianLoginTabProps {
-  email: string;
+  username: string;
   password: string;
-  setEmail: (email: string) => void;
+  setUsername: (username: string) => void;
   setPassword: (password: string) => void;
   handleLogin: (e: React.FormEvent) => void;
   error: string | null;
 }
 
 const GuardianLoginTab: React.FC<GuardianLoginTabProps> = ({
-  email,
+  username,
   password,
-  setEmail,
+  setUsername,
   setPassword,
   handleLogin,
   error
@@ -27,9 +27,9 @@ const GuardianLoginTab: React.FC<GuardianLoginTabProps> = ({
       <CardContent className="space-y-4">
         <ErrorAlert error={error} />
         <LoginCredentialFields 
-          email={email}
+          username={username}
           password={password}
-          setEmail={setEmail}
+          setUsername={setUsername}
           setPassword={setPassword}
         />
       </CardContent>

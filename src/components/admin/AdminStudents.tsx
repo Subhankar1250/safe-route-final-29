@@ -22,8 +22,8 @@ interface Student {
   pickupPoint: string;
   busNumber: string;
   driverId?: string;
-  username?: string;
-  password?: string;
+  guardianUsername?: string;
+  guardianPassword?: string;
 }
 
 interface Driver {
@@ -53,9 +53,9 @@ const AdminStudents: React.FC = () => {
   useEffect(() => {
     // Mock student data
     const mockStudents = [
-      { id: '1', name: 'Alice Johnson', grade: '3A', guardianName: 'Robert Johnson', pickupPoint: 'Main St & 1st Ave', busNumber: 'BUS001', driverId: '1', username: 'alice.johnson', password: '********' },
-      { id: '2', name: 'Bob Smith', grade: '2B', guardianName: 'Mary Smith', pickupPoint: 'Oak St & 5th Ave', busNumber: 'BUS002', driverId: '2', username: 'bob.smith', password: '********' },
-      { id: '3', name: 'Charlie Brown', grade: '4C', guardianName: 'Lucy Brown', pickupPoint: 'Pine St & 3rd Ave', busNumber: 'BUS001', driverId: '1', username: 'charlie.brown', password: '********' },
+      { id: '1', name: 'Alice Johnson', grade: '3A', guardianName: 'Robert Johnson', pickupPoint: 'Main St & 1st Ave', busNumber: 'BUS001', driverId: '1', guardianUsername: 'rjohnson', guardianPassword: '********' },
+      { id: '2', name: 'Bob Smith', grade: '2B', guardianName: 'Mary Smith', pickupPoint: 'Oak St & 5th Ave', busNumber: 'BUS002', driverId: '2', guardianUsername: 'msmith', guardianPassword: '********' },
+      { id: '3', name: 'Charlie Brown', grade: '4C', guardianName: 'Lucy Brown', pickupPoint: 'Pine St & 3rd Ave', busNumber: 'BUS001', driverId: '1', guardianUsername: 'lbrown', guardianPassword: '********' },
     ];
     setStudents(mockStudents);
 
@@ -75,21 +75,21 @@ const AdminStudents: React.FC = () => {
   );
 
   const handleAddStudent = () => {
-    // Generate credentials
-    const credentials = generateCredentials(newStudent.name, 'guardian');
+    // Generate guardian credentials
+    const guardianCredentials = generateCredentials(newStudent.guardianName, 'guardian');
     
     // Here would be the actual Supabase implementation to:
-    // 1. Create user account with the generated credentials
-    // 2. Store the student details
+    // 1. Create guardian user account with the generated credentials
+    // 2. Store the student details with link to guardian
     
     const id = Math.random().toString(36).substr(2, 9);
     
-    // Create the new student record with credentials
+    // Create the new student record with guardian credentials
     const student = { 
       ...newStudent, 
       id,
-      username: credentials.username,
-      password: credentials.password
+      guardianUsername: guardianCredentials.username,
+      guardianPassword: guardianCredentials.password
     };
     
     setStudents([...students, student as Student]);
@@ -106,16 +106,17 @@ const AdminStudents: React.FC = () => {
     
     toast({
       title: 'Success',
-      description: 'New student added successfully with auto-generated credentials',
+      description: 'New student added with guardian account',
     });
   };
 
   const handleDeleteStudent = (id: string) => {
     // Here would be the actual Supabase implementation
+    // to delete both student and associated guardian account
     setStudents(students.filter(student => student.id !== id));
     toast({
       title: 'Success',
-      description: 'Student deleted successfully',
+      description: 'Student and associated guardian account deleted successfully',
     });
   };
 
@@ -165,7 +166,7 @@ const AdminStudents: React.FC = () => {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Student Full Name</Label>
                   <Input 
                     id="name" 
                     value={newStudent.name}
@@ -221,7 +222,7 @@ const AdminStudents: React.FC = () => {
                   Add Student
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  A unique username and password will be automatically generated
+                  A guardian account will be automatically created for the student
                 </p>
               </div>
             </DialogContent>
@@ -238,7 +239,7 @@ const AdminStudents: React.FC = () => {
             <TableHead>Pickup Point</TableHead>
             <TableHead>Bus Number</TableHead>
             <TableHead>Driver</TableHead>
-            <TableHead>Credentials</TableHead>
+            <TableHead>Guardian Credentials</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -265,8 +266,8 @@ const AdminStudents: React.FC = () => {
                 </Button>
                 {showCredentials[student.id] && (
                   <div className="mt-1 text-xs">
-                    <p>Username: {student.username}</p>
-                    <p>Password: {student.password}</p>
+                    <p>Username: {student.guardianUsername}</p>
+                    <p>Password: {student.guardianPassword}</p>
                   </div>
                 )}
               </TableCell>

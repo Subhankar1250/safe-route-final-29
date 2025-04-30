@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,7 @@ import DriverLoginTab from './DriverLoginTab';
 import AdminLoginTab from './AdminLoginTab';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"guardian" | "driver" | "admin">("guardian");
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +23,8 @@ const Login: React.FC = () => {
     setError(null);
     
     // Simple validation
-    if (!email || !password) {
-      setError("Please enter both email and password");
+    if (!username || !password) {
+      setError("Please enter both username and password");
       return;
     }
     
@@ -33,8 +34,10 @@ const Login: React.FC = () => {
     });
     
     try {
-      // Here would go the actual auth logic when integrated with Supabase
-      // For now, let's keep the simulated login
+      // Here would be the actual auth logic when integrated with Supabase
+      // We'll use JWT with username-password authentication
+      
+      // Simulated login for now
       setTimeout(() => {
         if (role === "guardian") {
           navigate("/guardian/dashboard");
@@ -107,9 +110,9 @@ const Login: React.FC = () => {
           
           <TabsContent value="guardian">
             <GuardianLoginTab
-              email={email}
+              username={username}
               password={password}
-              setEmail={setEmail}
+              setUsername={setUsername}
               setPassword={setPassword}
               handleLogin={handleLogin}
               error={error}
@@ -118,9 +121,9 @@ const Login: React.FC = () => {
           
           <TabsContent value="driver">
             <DriverLoginTab
-              email={email}
+              username={username}
               password={password}
-              setEmail={setEmail}
+              setUsername={setUsername}
               setPassword={setPassword}
               handleLogin={handleLogin}
               error={error}
@@ -131,9 +134,9 @@ const Login: React.FC = () => {
 
           <TabsContent value="admin">
             <AdminLoginTab
-              email={email}
+              username={username}
               password={password}
-              setEmail={setEmail}
+              setUsername={setUsername}
               setPassword={setPassword}
               handleLogin={handleLogin}
               error={error}
