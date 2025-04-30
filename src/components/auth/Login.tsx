@@ -4,11 +4,16 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Smartphone, Users, Settings, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Smartphone, Users, Settings } from "lucide-react";
 import GuardianLoginTab from './GuardianLoginTab';
 import DriverLoginTab from './DriverLoginTab';
 import AdminLoginTab from './AdminLoginTab';
+
+// Admin credentials - hardcoded for demonstration
+const ADMIN_CREDENTIALS = {
+  username: "admin123",
+  password: "SafeRoute@2023"
+};
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -18,109 +23,89 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Simple validation
+
     if (!username || !password) {
       setError("Please enter both username and password");
       return;
     }
-    
-    toast({
-      title: "Logging in...",
-      description: `Attempting to log in as ${role}`,
-    });
-    
+
+    // Simplified authentication logic
     try {
-      // Here would be the actual auth logic when integrated with Supabase
-      // We'll use JWT with username-password authentication
-      
-      // Simulated login for now
-      setTimeout(() => {
-        if (role === "guardian") {
+      // Check for admin credentials
+      if (role === "admin" && 
+          username === ADMIN_CREDENTIALS.username && 
+          password === ADMIN_CREDENTIALS.password) {
+        toast({
+          title: "Login successful",
+          description: "Welcome to the admin dashboard",
+        });
+        navigate("/admin/dashboard");
+        return;
+      }
+
+      // Mock authentication for other roles
+      if (role === "guardian") {
+        if (username.startsWith("SishuTirtha")) {
+          toast({
+            title: "Guardian login successful",
+            description: "Welcome to Sishu Tirtha Safe Route",
+          });
           navigate("/guardian/dashboard");
-        } else if (role === "driver") {
-          navigate("/driver/dashboard");
-        } else if (role === "admin") {
-          navigate("/admin/dashboard");
+          return;
         }
-      }, 1500);
-    } catch (err) {
-      setError("Login failed. Please check your credentials.");
-      toast({
-        variant: "destructive",
-        title: "Login Error",
-        description: "Failed to authenticate. Please try again.",
-      });
-    }
-  };
-
-  const handleQrCodeScanned = (qrData: string) => {
-    // Process the QR code data
-    if (qrData.startsWith('driver_')) {
-      toast({
-        title: "QR Code Detected",
-        description: "Authenticating with driver QR code...",
-      });
+      } else if (role === "driver") {
+        if (username.includes("driver")) {
+          toast({
+            title: "Driver login successful",
+            description: "Welcome to Sishu Tirtha Safe Route",
+          });
+          navigate("/driver/dashboard");
+          return;
+        }
+      }
       
-      // Here you would verify the QR code with your backend
-      // For now, navigate directly to the driver dashboard
-      setTimeout(() => {
-        navigate("/driver/dashboard");
-      }, 1500);
-    } else {
-      setError("Invalid QR code. Please try again or use your credentials.");
+      setError("Invalid username or password");
+    } catch (error) {
+      setError("Login failed. Please try again.");
     }
-  };
-
-  const handleScannerError = (error: Error) => {
-    setError(`Scanner error: ${error.message}`);
-    toast({
-      variant: "destructive",
-      title: "Scanner Error",
-      description: error.message,
-    });
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-2 text-center">
+          <div className="mx-auto w-16 h-16 mb-2">
             <img 
-              src="/lovable-uploads/5660de73-133f-4d61-aa57-08b2be7b455d.png" 
-              alt="Sishu Tirtha Safe Route" 
-              className="h-24 w-24" 
+              src="/logo-placeholder.svg" 
+              alt="Sishu Tirtha Logo" 
+              className="w-full h-full object-contain"
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-primary">Sishu Tirtha Safe Route</CardTitle>
-          <div className="flex items-center justify-center space-x-1 text-sm">
-            <span>Baradongal</span>
-            <ArrowRight className="h-4 w-4" />
-            <span>Arambagh</span>
-            <ArrowRight className="h-4 w-4" />
-            <span>Hooghly</span>
-          </div>
-          <CardDescription>The safest route for your child's journey</CardDescription>
+          <CardTitle className="text-2xl font-bold text-sishu-primary">Sishu Tirtha Safe Route</CardTitle>
+          <CardDescription>Track school transport in real-time</CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="guardian" className="w-full" onValueChange={(value) => setRole(value as "guardian" | "driver" | "admin")}>
-          <TabsList className="grid grid-cols-3 mb-4 mx-4">
-            <TabsTrigger value="guardian" className="flex items-center gap-2">
-              <Users size={16} /> Guardian
+        <Tabs value={role} onValueChange={(value: string) => setRole(value as "guardian" | "driver" | "admin")}>
+          <TabsList className="grid grid-cols-3">
+            <TabsTrigger value="guardian">
+              <Users className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Guardian</span>
             </TabsTrigger>
-            <TabsTrigger value="driver" className="flex items-center gap-2">
-              <Smartphone size={16} /> Driver
+            <TabsTrigger value="driver">
+              <Smartphone className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Driver</span>
             </TabsTrigger>
-            <TabsTrigger value="admin" className="flex items-center gap-2">
-              <Settings size={16} /> Admin
+            <TabsTrigger value="admin">
+              <Settings className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Admin</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="guardian">
-            <GuardianLoginTab
+            <GuardianLoginTab 
               username={username}
               password={password}
               setUsername={setUsername}
@@ -131,20 +116,18 @@ const Login: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="driver">
-            <DriverLoginTab
+            <DriverLoginTab 
               username={username}
               password={password}
               setUsername={setUsername}
               setPassword={setPassword}
               handleLogin={handleLogin}
               error={error}
-              handleQrCodeScanned={handleQrCodeScanned}
-              handleScannerError={handleScannerError}
             />
           </TabsContent>
-
+          
           <TabsContent value="admin">
-            <AdminLoginTab
+            <AdminLoginTab 
               username={username}
               password={password}
               setUsername={setUsername}
@@ -155,12 +138,6 @@ const Login: React.FC = () => {
           </TabsContent>
         </Tabs>
       </Card>
-      
-      {/* Fixed Footer Text */}
-      <div className="w-full max-w-md mt-4 bg-primary text-white rounded-md p-2 text-center">
-        <p className="text-sm">Developed By : The Phoenix Devs.</p>
-        <p className="text-sm">Created By : Subhankar Ghorui</p>
-      </div>
     </div>
   );
 };
