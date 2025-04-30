@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,11 +7,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
 import { useFirebase } from '@/contexts/FirebaseContext';
-import { Plus, Edit, Trash, Search, Key, QrCode } from 'lucide-react';
+import { Plus, Edit, Trash, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCredentials } from '@/utils/authUtils';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Driver {
   id: string;
@@ -20,90 +17,65 @@ interface Driver {
   phone: string;
   license: string;
   busNumber: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive"; // Fixed status type
   username?: string;
   password?: string;
 }
 
+const mockDrivers: Driver[] = [
+  { id: '1', name: 'John Doe', phone: '555-1234', license: 'DL12345', busNumber: 'BUS001', status: "active" },
+  { id: '2', name: 'Jane Smith', phone: '555-5678', license: 'DL67890', busNumber: 'BUS002', status: "active" },
+  { id: '3', name: 'Bob Johnson', phone: '555-9012', license: 'DL45678', busNumber: 'BUS003', status: "inactive" },
+];
+
 const AdminDrivers: React.FC = () => {
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCredentials, setShowCredentials] = useState<{[key: string]: boolean}>({});
   const [newDriver, setNewDriver] = useState<Omit<Driver, 'id'>>({
     name: '',
     phone: '',
     license: '',
     busNumber: '',
-    status: 'active'
+    status: 'active', // Fixed to use the correct type
   });
-  
+
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
-  // Mock data loading - in a real app, would fetch from Supabase
-  useEffect(() => {
-    const mockDrivers = [
-      { id: '1', name: 'John Doe', phone: '555-1234', license: 'DL123456', busNumber: 'BUS001', status: 'active', username: 'john.doe', password: '********' },
-      { id: '2', name: 'Jane Smith', phone: '555-5678', license: 'DL789123', busNumber: 'BUS002', status: 'active', username: 'jane.smith', password: '********' },
-      { id: '3', name: 'Mike Johnson', phone: '555-9012', license: 'DL456789', busNumber: 'BUS003', status: 'inactive', username: 'mike.johnson', password: '********' },
-    ];
-    setDrivers(mockDrivers);
-  }, []);
-
+  // Filter drivers based on search term
   const filteredDrivers = drivers.filter(driver => 
     driver.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    driver.busNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    driver.phone.includes(searchTerm) ||
+    driver.busNumber.includes(searchTerm)
   );
-
+  
+  // Add new driver with auto-generated credentials
   const handleAddDriver = () => {
-    // Generate credentials
+    const id = Math.random().toString(36).substr(2, 9);
     const credentials = generateCredentials(newDriver.name, 'driver');
     
-    // Here would be the actual Supabase implementation to:
-    // 1. Create user account with the generated credentials
-    // 2. Store the driver details
-    
-    const id = Math.random().toString(36).substr(2, 9);
-    
-    // Create the new driver record with credentials
-    const driver = { 
-      ...newDriver, 
+    // Create a new driver with the correct type
+    const driver: Driver = {
+      ...newDriver,
       id,
       username: credentials.username,
-      password: credentials.password
+      password: credentials.password,
     };
     
-    setDrivers([...drivers, driver as Driver]);
-    
-    // Reset the form
-    setNewDriver({
-      name: '',
-      phone: '',
-      license: '',
-      busNumber: '',
-      status: 'active'
-    });
+    setDrivers([...drivers, driver]);
     
     toast({
       title: 'Success',
-      description: 'New driver added successfully with auto-generated credentials',
+      description: 'New driver added successfully',
     });
   };
 
   const handleDeleteDriver = (id: string) => {
-    // Here would be the actual Supabase implementation
     setDrivers(drivers.filter(driver => driver.id !== id));
     toast({
       title: 'Success',
       description: 'Driver deleted successfully',
     });
-  };
-
-  const toggleShowCredentials = (id: string) => {
-    setShowCredentials(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
   };
 
   return (
@@ -141,15 +113,15 @@ const AdminDrivers: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input 
-                    id="phone"
+                    id="phone" 
                     value={newDriver.phone}
-                    onChange={(e) => setNewDriver({...newDriver, phone: e.target.value})} 
+                    onChange={(e) => setNewDriver({...newDriver, phone: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="license">Driver's License</Label>
+                  <Label htmlFor="license">License</Label>
                   <Input 
                     id="license" 
                     value={newDriver.license}
@@ -167,9 +139,6 @@ const AdminDrivers: React.FC = () => {
                 <Button onClick={handleAddDriver} className="w-full">
                   Add Driver
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  A unique username and password will be automatically generated
-                </p>
               </div>
             </DialogContent>
           </Dialog>
@@ -184,7 +153,6 @@ const AdminDrivers: React.FC = () => {
             <TableHead>License</TableHead>
             <TableHead>Bus Number</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Credentials</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -195,42 +163,7 @@ const AdminDrivers: React.FC = () => {
               <TableCell>{driver.phone}</TableCell>
               <TableCell>{driver.license}</TableCell>
               <TableCell>{driver.busNumber}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  driver.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {driver.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => toggleShowCredentials(driver.id)}
-                  >
-                    <Key className="h-3.5 w-3.5" />
-                    {showCredentials[driver.id] ? 'Hide' : 'Show'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    <QrCode className="h-3.5 w-3.5" />
-                    QR Code
-                  </Button>
-                </div>
-                {showCredentials[driver.id] && (
-                  <div className="mt-1 text-xs">
-                    <p>Username: {driver.username}</p>
-                    <p>Password: {driver.password}</p>
-                  </div>
-                )}
-              </TableCell>
+              <TableCell>{driver.status}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button variant="ghost" size="icon">
