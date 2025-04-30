@@ -47,3 +47,71 @@ export function validateAdminCredentials(username: string, password: string): bo
   
   return username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password;
 }
+
+/**
+ * Updates admin password
+ * @param currentPassword Current password for verification
+ * @param newPassword New password to set
+ * @returns Object with success status and message
+ */
+export function updateAdminPassword(currentPassword: string, newPassword: string): { success: boolean; message: string } {
+  // In a real app, this would update the password in a secure database
+  // For this demo, we're validating against the hardcoded password
+  const ADMIN_CREDENTIALS = {
+    username: "admin123",
+    password: "SafeRoute@2023"
+  };
+  
+  if (currentPassword !== ADMIN_CREDENTIALS.password) {
+    return { 
+      success: false, 
+      message: "Current password is incorrect" 
+    };
+  }
+  
+  if (newPassword.length < 8) {
+    return { 
+      success: false, 
+      message: "New password must be at least 8 characters long" 
+    };
+  }
+  
+  // In a real app, this would update the password in the database
+  // For demo purposes, we'll just return success
+  return { 
+    success: true, 
+    message: "Password updated successfully" 
+  };
+}
+
+/**
+ * Updates guardian credentials
+ * @param guardianId The ID of the guardian
+ * @param newUsername Optional new username
+ * @param newPassword Optional new password
+ * @returns Object with success status and message
+ */
+export function updateGuardianCredentials(
+  studentId: string,
+  newUsername?: string,
+  newPassword?: string
+): { success: boolean; message: string; username?: string; password?: string } {
+  // In a real app, this would update the credentials in the database
+  // For this demo, we'll just generate new credentials if requested
+  
+  if (!newUsername && !newPassword) {
+    return {
+      success: false,
+      message: "No changes requested"
+    };
+  }
+  
+  // For demonstration purposes, we'll return the new credentials
+  // In a real app, this would update the database
+  return {
+    success: true,
+    message: "Guardian credentials updated successfully",
+    username: newUsername,
+    password: newPassword
+  };
+}
