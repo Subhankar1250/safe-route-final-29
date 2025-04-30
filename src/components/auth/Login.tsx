@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -145,30 +144,13 @@ const Login: React.FC = () => {
         </Tabs>
       </Card>
       
-      {/* Scrolling Footer Text */}
-      <div className="w-full max-w-md mt-4 overflow-hidden bg-sishu-primary text-white rounded-md">
-        <div className="scrolling-text py-2">
-          Developed By : The Phoenix Devs. Created By : Subhankar Ghorui
-        </div>
+      {/* Fixed Footer Text */}
+      <div className="w-full max-w-md mt-4 bg-sishu-primary text-white rounded-md p-2 text-center">
+        <p className="text-sm">Developed By : The Phoenix Devs.</p>
+        <p className="text-sm">Created By : Subhankar Ghorui</p>
       </div>
-      
-      <style>
-        {`
-        .scrolling-text {
-          white-space: nowrap;
-          overflow: hidden;
-          animation: scroll-text 15s linear infinite;
-        }
-        
-        @keyframes scroll-text {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        `}
-      </style>
     </div>
   );
 };
 
 export default Login;
-
