@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase } from '@/contexts/FirebaseContext';
 import { validatePassword } from '@/utils/authUtils';
+import { httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
 
 interface GuardianCredentialManagerProps {
   guardianId: string;
@@ -24,7 +26,8 @@ const GuardianCredentialManager: React.FC<GuardianCredentialManagerProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const { app } = useFirebase();
+  const functions = getFunctions(app);
 
   const handleResetPassword = async () => {
     if (!newPassword) {
@@ -48,20 +51,48 @@ const GuardianCredentialManager: React.FC<GuardianCredentialManagerProps> = ({
     setIsLoading(true);
 
     try {
-      // In Firebase implementation, we'd use:
-      // 1. admin.auth().updateUser(uid, { password: newPassword })
-      // But since we're in client, we'll need a cloud function for this
-      // For now, we'll simulate success for demonstration
+      // In a production environment, you would use Firebase Cloud Functions
+      // to securely reset user passwords (since client-side code cannot reset other users' passwords)
+      // Here's how you would call such a function:
       
-      console.log(`Password reset for guardian ${guardianId} with email ${guardianEmail}`);
-      
-      toast({
-        title: "Success",
-        description: `Password for ${guardianUsername} has been reset`,
-      });
-      
-      onSuccess();
-      setNewPassword('');
+      if (process.env.NODE_ENV === 'development') {
+        // For development/demo purposes only - simulate success
+        console.log(`Password reset for guardian ${guardianId} with email ${guardianEmail}`);
+        
+        // In production, you would uncomment this code:
+        /*
+        const resetPassword = httpsCallable(functions, 'resetUserPassword');
+        await resetPassword({
+          uid: guardianId,
+          newPassword: newPassword
+        });
+        */
+        
+        toast({
+          title: "Success",
+          description: `Password for ${guardianUsername} has been reset`,
+        });
+        
+        onSuccess();
+        setNewPassword('');
+      } else {
+        // For production environment
+        // Note: You need to deploy a Firebase Cloud Function for this to work
+        // The function would use Firebase Admin SDK to reset the password
+        const resetPassword = httpsCallable(functions, 'resetUserPassword');
+        await resetPassword({
+          uid: guardianId,
+          newPassword: newPassword
+        });
+        
+        toast({
+          title: "Success",
+          description: `Password for ${guardianUsername} has been reset`,
+        });
+        
+        onSuccess();
+        setNewPassword('');
+      }
     } catch (error) {
       console.error("Password reset error:", error);
       toast({

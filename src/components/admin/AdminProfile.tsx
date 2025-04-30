@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase } from '@/contexts/FirebaseContext';
 import { validatePassword } from '@/utils/authUtils';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminProfile: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -16,6 +17,7 @@ const AdminProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { auth } = useFirebase();
+  const { currentUser } = useAuth();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +55,17 @@ const AdminProfile: React.FC = () => {
     try {
       // For Firebase: Get current user and update password
       const user = auth.currentUser;
-      if (!user) {
+      if (!user || !user.email) {
         throw new Error("No authenticated user found");
       }
+      
+      // Re-authenticate user before changing password
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+      
+      await reauthenticateWithCredential(user, credential);
       
       // Update password in Firebase
       await updatePassword(user, newPassword);
@@ -70,12 +80,20 @@ const AdminProfile: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Password update error:", error);
+      
+      let errorMessage = "Could not update password. Please try again.";
+      if (error.code === 'auth/wrong-password') {
+        errorMessage = "Current password is incorrect. Please try again.";
+      } else if (error.code === 'auth/requires-recent-login') {
+        errorMessage = "For security reasons, please log out and log back in before changing your password.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Update Failed",
-        description: "Could not update password. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
