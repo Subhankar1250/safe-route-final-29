@@ -24,14 +24,7 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-100">
       <div className="bg-sishu-primary text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/b55ae93a-8caa-4b8d-adf2-236672c40ecb.png" 
-              alt="Sishu Tirtha Logo" 
-              className="h-12 w-12 mr-3"
-            />
-            <h1 className="text-xl font-bold">Sishu Tirtha Admin Panel</h1>
-          </div>
+          <h1 className="text-xl font-bold">Sishu Tirtha Admin Panel</h1>
           <div className="flex items-center space-x-4">
             <span>{user.name}</span>
             <Menubar className="border-none bg-transparent">

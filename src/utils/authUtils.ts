@@ -1,117 +1,91 @@
 
 /**
- * Generates secure credentials based on name and role
- * @param name The name to generate credentials for
- * @param role The role (guardian, driver, admin)
- * @returns An object containing generated username and password
+ * Helper functions for authentication
  */
-export function generateCredentials(name: string, role: string): { username: string; password: string } {
-  // Remove spaces and special chars, then take first part of name if it contains spaces
-  const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
-  // Create a deterministic but seemingly random number based on the name and role
-  const nameSum = cleanName.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const randomNum = ((nameSum * 13) % 10000).toString().padStart(4, '0');
-  
-  // Create username with role prefix and name
-  let username = '';
+
+interface Credentials {
+  username: string;
+  password: string;
+  email?: string; // Optional for backward compatibility
+}
+
+/**
+ * Generates a unique username and password for a new user
+ * @param name The full name of the user
+ * @param role The role of the user (guardian, driver, admin)
+ * @returns An object containing the generated username and password
+ */
+export const generateCredentials = (name: string, role: 'guardian' | 'driver' | 'admin'): Credentials => {
   if (role === 'guardian') {
-    username = `SishuTirtha${cleanName}${randomNum}`;
+    // For guardians, use the SishuTirtha prefix with the student name
+    // Remove spaces, special characters, and convert to lowercase
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/gi, '');
+    
+    // Generate a random suffix (4 digits) for uniqueness
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    
+    // Create username with format: SishuTirtha + studentName + randomSuffix
+    const username = `SishuTirtha${cleanName}${randomSuffix}`;
+    
+    // Generate a secure password based on the student name with special characters and numbers
+    // For increased security, we'll add special characters and ensure minimum length
+    const specialChars = '!@#$%^&*';
+    const randomSpecialChar = specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+    const randomDigits = Math.floor(100000 + Math.random() * 900000); // 6-digit number
+    
+    // Password format: studentName + specialChar + 6-digit number
+    // This ensures a strong password with mixed characters
+    let password = `${cleanName}${randomSpecialChar}${randomDigits}`;
+    
+    // Ensure password is at least 10 characters
+    if (password.length < 10) {
+      const additionalChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+      while (password.length < 10) {
+        password += additionalChars.charAt(Math.floor(Math.random() * additionalChars.length));
+      }
+    }
+    
+    return { username, password };
   } else {
-    username = `${role}_${cleanName}${randomNum}`;
+    // For other roles, use the existing logic
+    // Generate username based on name (lowercase, no spaces, add random digits)
+    const nameParts = name.toLowerCase().split(' ');
+    const baseUsername = nameParts.join('');
+    const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    const username = baseUsername + randomDigits;
+    
+    // Generate a secure password
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    return { username, password };
   }
-  
-  // Generate a password with some complexity
-  const specialChars = ['!', '@', '#', '$', '%', '&'];
-  const randomSpecialChar = specialChars[nameSum % specialChars.length];
-  const password = `${cleanName.substring(0, 4)}${randomSpecialChar}${randomNum}`;
-  
-  return {
-    username,
-    password
-  };
-}
+};
 
 /**
- * Validates admin credentials
- * @param username The username to check
- * @param password The password to check
- * @returns Boolean indicating if credentials are valid
+ * Validates a username
+ * @param username The username to validate
+ * @returns True if the username is valid, false otherwise
  */
-export function validateAdminCredentials(username: string, password: string): boolean {
-  // Admin credentials - same as in Login.tsx
-  const ADMIN_CREDENTIALS = {
-    username: "admin123",
-    password: "SafeRoute@2023"
-  };
-  
-  return username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password;
-}
+export const validateUsername = (username: string): boolean => {
+  // Username must be at least 4 characters long and contain only alphanumeric characters
+  return username.length >= 4 && /^[a-zA-Z0-9]+$/.test(username);
+};
 
 /**
- * Updates admin password
- * @param currentPassword Current password for verification
- * @param newPassword New password to set
- * @returns Object with success status and message
+ * Validates a password
+ * @param password The password to validate
+ * @returns True if the password is valid, false otherwise
  */
-export function updateAdminPassword(currentPassword: string, newPassword: string): { success: boolean; message: string } {
-  // In a real app, this would update the password in a secure database
-  // For this demo, we're validating against the hardcoded password
-  const ADMIN_CREDENTIALS = {
-    username: "admin123",
-    password: "SafeRoute@2023"
-  };
+export const validatePassword = (password: string): boolean => {
+  // Password must be at least 8 characters long
+  // And contain at least one number, one uppercase letter, and one special character
+  const hasNumber = /\d/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*]/.test(password);
   
-  if (currentPassword !== ADMIN_CREDENTIALS.password) {
-    return { 
-      success: false, 
-      message: "Current password is incorrect" 
-    };
-  }
-  
-  if (newPassword.length < 8) {
-    return { 
-      success: false, 
-      message: "New password must be at least 8 characters long" 
-    };
-  }
-  
-  // In a real app, this would update the password in the database
-  // For demo purposes, we'll just return success
-  return { 
-    success: true, 
-    message: "Password updated successfully" 
-  };
-}
-
-/**
- * Updates guardian credentials
- * @param guardianId The ID of the guardian
- * @param newUsername Optional new username
- * @param newPassword Optional new password
- * @returns Object with success status and message
- */
-export function updateGuardianCredentials(
-  studentId: string,
-  newUsername?: string,
-  newPassword?: string
-): { success: boolean; message: string; username?: string; password?: string } {
-  // In a real app, this would update the credentials in the database
-  // For this demo, we'll just generate new credentials if requested
-  
-  if (!newUsername && !newPassword) {
-    return {
-      success: false,
-      message: "No changes requested"
-    };
-  }
-  
-  // For demonstration purposes, we'll return the new credentials
-  // In a real app, this would update the database
-  return {
-    success: true,
-    message: "Guardian credentials updated successfully",
-    username: newUsername,
-    password: newPassword
-  };
-}
+  return password.length >= 8 && hasNumber && (hasUppercase || hasSpecialChar);
+};

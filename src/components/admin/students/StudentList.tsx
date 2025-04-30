@@ -6,7 +6,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import GuardianCredentialManager from './GuardianCredentialManager';
 
 interface Driver {
   id: string;
@@ -81,29 +80,21 @@ const StudentList: React.FC<StudentListProps> = ({
               {drivers.find(d => d.id === student.driverId)?.name || 'Not assigned'}
             </TableCell>
             <TableCell>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={() => toggleShowCredentials(student.id)}
-                >
-                  <Key className="h-3.5 w-3.5" />
-                  {showCredentials[student.id] ? 'Hide' : 'Show'}
-                </Button>
-                {showCredentials[student.id] && (
-                  <div className="mt-1 text-xs">
-                    <p>Username: {student.guardianUsername}</p>
-                    <p>Password: {student.guardianPassword}</p>
-                  </div>
-                )}
-                <GuardianCredentialManager
-                  studentId={student.id}
-                  studentName={student.name}
-                  guardianName={student.guardianName}
-                  currentUsername={student.guardianUsername || ''}
-                />
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => toggleShowCredentials(student.id)}
+              >
+                <Key className="h-3.5 w-3.5" />
+                {showCredentials[student.id] ? 'Hide' : 'Show'}
+              </Button>
+              {showCredentials[student.id] && (
+                <div className="mt-1 text-xs">
+                  <p>Username: {student.guardianUsername}</p>
+                  <p>Password: {student.guardianPassword}</p>
+                </div>
+              )}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
