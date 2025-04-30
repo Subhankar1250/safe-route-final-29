@@ -31,7 +31,12 @@ const GuardianLoginTab: React.FC<GuardianLoginTabProps> = ({
           password={password}
           setUsername={setUsername}
           setPassword={setPassword}
+          usernamePlaceholder="SishuTirthaStudentName1234"
         />
+        <div className="text-xs text-muted-foreground">
+          <p>Your username starts with "SishuTirtha" followed by your child's name and numbers</p>
+          <p>If you don't know your login details, please contact the school administrator</p>
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col">
         <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,8 +74,9 @@ const AdminStudents: React.FC = () => {
   );
 
   const handleAddStudent = () => {
-    // Generate guardian credentials
-    const guardianCredentials = generateCredentials(newStudent.guardianName, 'guardian');
+    // Generate guardian credentials based on the student's name for stronger association
+    // This creates a username with the SishuTirtha prefix and a secure password
+    const guardianCredentials = generateCredentials(newStudent.name, 'guardian');
     
     // Here would be the actual Supabase implementation to:
     // 1. Create guardian user account with the generated credentials
@@ -106,7 +106,7 @@ const AdminStudents: React.FC = () => {
     
     toast({
       title: 'Success',
-      description: 'New student added with guardian account',
+      description: `New student added with guardian account (${guardianCredentials.username})`,
     });
   };
 
