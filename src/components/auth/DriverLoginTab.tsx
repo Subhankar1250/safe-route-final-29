@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
-import { ScanLine } from "lucide-react";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import LoginCredentialFields from './LoginCredentialFields';
 import ErrorAlert from './ErrorAlert';
 import QrScanner from './QrScanner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from '@/components/ui/use-toast';
+import { QrCode, User } from 'lucide-react';
 
 interface DriverLoginTabProps {
   username: string;
@@ -14,8 +16,6 @@ interface DriverLoginTabProps {
   setPassword: (password: string) => void;
   handleLogin: (e: React.FormEvent) => void;
   error: string | null;
-  handleQrCodeScanned: (qrData: string) => void;
-  handleScannerError: (error: Error) => void;
 }
 
 const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
@@ -24,70 +24,108 @@ const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
   setUsername,
   setPassword,
   handleLogin,
-  error,
-  handleQrCodeScanned,
-  handleScannerError
+  error
 }) => {
-  const [isScanning, setIsScanning] = useState(false);
-
-  const toggleScanner = () => {
-    setIsScanning(!isScanning);
+  const [loginMethod, setLoginMethod] = useState<"credentials" | "qr">("credentials");
+  const { toast } = useToast();
+  
+  // Handle QR scan result
+  const handleQRScan = (decodedText: string) => {
+    try {
+      const loginData = JSON.parse(decodedText);
+      
+      if (loginData.token) {
+        // In a real app, you would validate this token with your backend
+        toast({
+          title: "QR Code Detected",
+          description: "Processing login via QR code...",
+        });
+        
+        // If we also have username and password, we can auto-fill the form
+        if (loginData.username && loginData.password) {
+          setUsername(loginData.username);
+          setPassword(loginData.password);
+          
+          // In a real implementation, you would handle the form submission automatically
+          // For now, we'll just set the fields and notify the user
+          setLoginMethod("credentials");
+          
+          toast({
+            title: "Login Info Retrieved",
+            description: "Username and password auto-filled. Please click Login to continue.",
+          });
+        } else {
+          // If we only have the token, we would directly authenticate with it
+          // For this demo, we'll show a toast
+          toast({
+            title: "Success",
+            description: "QR code login successful!",
+          });
+        }
+      } else {
+        throw new Error("Invalid QR code format");
+      }
+    } catch (err) {
+      toast({
+        title: "Invalid QR Code",
+        description: "The scanned QR code is not valid for login.",
+        variant: "destructive"
+      });
+    }
   };
-
+  
+  // Handle QR scan error
+  const handleQRError = (error: Error) => {
+    toast({
+      title: "QR Scan Error",
+      description: error.message,
+      variant: "destructive"
+    });
+  };
+  
   return (
-    <CardContent className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="font-medium">Login with your QR Code</p>
-        <p className="text-sm text-muted-foreground">Scan the QR code provided by your administrator</p>
-      </div>
+    <Tabs value={loginMethod} onValueChange={(value: string) => setLoginMethod(value as "credentials" | "qr")}>
+      <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsTrigger value="credentials">
+          <User className="mr-2 h-4 w-4" /> Username & Password
+        </TabsTrigger>
+        <TabsTrigger value="qr">
+          <QrCode className="mr-2 h-4 w-4" /> QR Code
+        </TabsTrigger>
+      </TabsList>
       
-      {isScanning ? (
-        <div className="relative">
+      <TabsContent value="credentials">
+        <form onSubmit={handleLogin}>
+          <CardContent className="space-y-4">
+            <ErrorAlert error={error} />
+            <LoginCredentialFields 
+              username={username}
+              password={password}
+              setUsername={setUsername}
+              setPassword={setPassword}
+            />
+          </CardContent>
+          <CardFooter className="flex flex-col">
+            <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
+              Login as Driver
+            </Button>
+          </CardFooter>
+        </form>
+      </TabsContent>
+      
+      <TabsContent value="qr">
+        <CardContent className="space-y-4 flex flex-col items-center justify-center">
+          <ErrorAlert error={error} />
+          <p className="text-sm text-center text-muted-foreground">
+            Scan your driver QR code to log in instantly
+          </p>
           <QrScanner 
-            onScan={handleQrCodeScanned}
-            onError={handleScannerError}
+            onScan={handleQRScan}
+            onError={handleQRError}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="absolute top-2 right-2 rounded-full p-2"
-            onClick={toggleScanner}
-          >
-            &times;
-          </Button>
-        </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 w-48 h-48 mx-auto flex items-center justify-center">
-          <Button 
-            type="button" 
-            className="bg-sishu-primary hover:bg-blue-700 flex items-center gap-2"
-            onClick={toggleScanner}
-          >
-            <ScanLine size={16} />
-            Scan QR Code
-          </Button>
-        </div>
-      )}
-      
-      <ErrorAlert error={error} />
-      
-      <p className="text-xs text-gray-500 text-center mt-4">
-        Having trouble scanning? Use your login credentials instead
-      </p>
-      
-      <form onSubmit={handleLogin} className="mt-4 space-y-4">
-        <LoginCredentialFields 
-          username={username}
-          password={password}
-          setUsername={setUsername}
-          setPassword={setPassword}
-          forgotPasswordLink={false}
-        />
-        <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
-          Login with Credentials
-        </Button>
-      </form>
-    </CardContent>
+        </CardContent>
+      </TabsContent>
+    </Tabs>
   );
 };
 

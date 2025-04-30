@@ -29,6 +29,23 @@ export const signInWithUsername = async (username: string, password: string) => 
   }
 };
 
+// QR Token authentication for drivers
+export const signInWithQrToken = async (token: string) => {
+  try {
+    // Use the Supabase functions to authenticate with QR token
+    const { data, error } = await supabase.rpc('authenticate_qr_token', {
+      p_token: token
+    });
+    
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error signing in with QR token:', error);
+    return { data: null, error };
+  }
+};
+
 // Location tracking helpers
 export const updateBusLocation = async (
   busNumber: string,
@@ -53,6 +70,44 @@ export const updateBusLocation = async (
     return { data, error: null };
   } catch (error) {
     console.error('Error updating bus location:', error);
+    return { data: null, error };
+  }
+};
+
+// Get bus locations by route or bus number
+export const getBusLocations = async (
+  routeId?: string, 
+  busNumber?: string
+) => {
+  try {
+    let query = supabase
+      .from('bus_locations')
+      .select(`
+        id,
+        bus_number,
+        driver:drivers(id, name),
+        latitude,
+        longitude,
+        timestamp,
+        is_active,
+        route:routes(id, name)
+      `);
+    
+    if (routeId) {
+      query = query.eq('route.id', routeId);
+    }
+    
+    if (busNumber) {
+      query = query.eq('bus_number', busNumber);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting bus locations:', error);
     return { data: null, error };
   }
 };

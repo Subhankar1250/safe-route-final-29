@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import LoginCredentialFields from './LoginCredentialFields';
 import ErrorAlert from './ErrorAlert';
+import { Key } from 'lucide-react';
 
 interface AdminLoginTabProps {
   username: string;
@@ -35,7 +36,7 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
       </CardContent>
       <CardFooter className="flex flex-col">
         <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
-          Login as Admin
+          <Key className="mr-2 h-4 w-4" /> Login as Admin
         </Button>
       </CardFooter>
     </form>

@@ -42,7 +42,9 @@ const CredentialGenerator: React.FC = () => {
       ...newCreds,
       id: Date.now().toString(),
       name,
-      createdAt: new Date()
+      role, // Adding the role property that was missing
+      createdAt: new Date(),
+      email: `${newCreds.username}@example.com` // Adding a placeholder email
     };
 
     setCredentials([newCredential, ...credentials]);
@@ -58,7 +60,7 @@ const CredentialGenerator: React.FC = () => {
     const credText = `
 Name: ${credential.name}
 Role: ${credential.role}
-Username/Email: ${credential.email}
+Username: ${credential.username}
 Password: ${credential.password}
 Generated: ${credential.createdAt.toLocaleString()}
     `.trim();

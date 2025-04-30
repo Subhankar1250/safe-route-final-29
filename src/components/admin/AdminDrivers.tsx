@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +8,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
 import { useFirebase } from '@/contexts/FirebaseContext';
-import { Plus, Edit, Trash, Search } from 'lucide-react';
+import { Plus, Edit, Trash, Search, QrCode } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCredentials } from '@/utils/authUtils';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Driver {
   id: string;
@@ -17,27 +19,60 @@ interface Driver {
   phone: string;
   license: string;
   busNumber: string;
-  status: "active" | "inactive"; // Fixed status type
-  username?: string;
-  password?: string;
+  status: "active" | "inactive";
+  username: string;
+  password: string;
+  qrToken: string;
 }
 
 const mockDrivers: Driver[] = [
-  { id: '1', name: 'John Doe', phone: '555-1234', license: 'DL12345', busNumber: 'BUS001', status: "active" },
-  { id: '2', name: 'Jane Smith', phone: '555-5678', license: 'DL67890', busNumber: 'BUS002', status: "active" },
-  { id: '3', name: 'Bob Johnson', phone: '555-9012', license: 'DL45678', busNumber: 'BUS003', status: "inactive" },
+  { 
+    id: '1', 
+    name: 'John Doe', 
+    phone: '555-1234', 
+    license: 'DL12345', 
+    busNumber: 'BUS001', 
+    status: "active",
+    username: 'johndoe1234',
+    password: 'securePass123',
+    qrToken: 'driver_token_12345'
+  },
+  { 
+    id: '2', 
+    name: 'Jane Smith', 
+    phone: '555-5678', 
+    license: 'DL67890', 
+    busNumber: 'BUS002', 
+    status: "active",
+    username: 'janesmith5678',
+    password: 'securePass456',
+    qrToken: 'driver_token_67890'
+  },
+  { 
+    id: '3', 
+    name: 'Bob Johnson', 
+    phone: '555-9012', 
+    license: 'DL45678', 
+    busNumber: 'BUS003', 
+    status: "inactive",
+    username: 'bobjohnson9012',
+    password: 'securePass789',
+    qrToken: 'driver_token_54321'
+  },
 ];
 
 const AdminDrivers: React.FC = () => {
   const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newDriver, setNewDriver] = useState<Omit<Driver, 'id'>>({
+  const [newDriver, setNewDriver] = useState<Omit<Driver, 'id' | 'username' | 'password' | 'qrToken'>>({
     name: '',
     phone: '',
     license: '',
     busNumber: '',
-    status: 'active', // Fixed to use the correct type
+    status: 'active',
   });
+  const [currentQrCode, setCurrentQrCode] = useState<string | null>(null);
+  const [selectedDriverCredentials, setSelectedDriverCredentials] = useState<{username: string, password: string} | null>(null);
 
   const { firestore } = useFirebase();
   const { toast } = useToast();
@@ -49,24 +84,38 @@ const AdminDrivers: React.FC = () => {
     driver.busNumber.includes(searchTerm)
   );
   
-  // Add new driver with auto-generated credentials
+  // Add new driver with auto-generated credentials and QR code token
   const handleAddDriver = () => {
     const id = Math.random().toString(36).substr(2, 9);
     const credentials = generateCredentials(newDriver.name, 'driver');
+    const qrToken = `driver_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Create a new driver with the correct type
+    // Create a new driver with credentials and QR token
     const driver: Driver = {
       ...newDriver,
       id,
       username: credentials.username,
       password: credentials.password,
+      qrToken
     };
     
     setDrivers([...drivers, driver]);
     
+    // Show the QR code with credentials
+    setCurrentQrCode(JSON.stringify({
+      token: qrToken,
+      username: credentials.username,
+      password: credentials.password
+    }));
+    
+    setSelectedDriverCredentials({
+      username: credentials.username,
+      password: credentials.password
+    });
+    
     toast({
       title: 'Success',
-      description: 'New driver added successfully',
+      description: 'New driver added successfully with auto-generated login credentials',
     });
   };
 
@@ -76,6 +125,23 @@ const AdminDrivers: React.FC = () => {
       title: 'Success',
       description: 'Driver deleted successfully',
     });
+  };
+
+  const viewDriverQrCode = (driver: Driver) => {
+    setCurrentQrCode(JSON.stringify({
+      token: driver.qrToken,
+      username: driver.username,
+      password: driver.password
+    }));
+    setSelectedDriverCredentials({
+      username: driver.username,
+      password: driver.password
+    });
+  };
+
+  const handleCloseQrDialog = () => {
+    setCurrentQrCode(null);
+    setSelectedDriverCredentials(null);
   };
 
   return (
@@ -166,6 +232,13 @@ const AdminDrivers: React.FC = () => {
               <TableCell>{driver.status}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => viewDriverQrCode(driver)}
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon">
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -182,6 +255,39 @@ const AdminDrivers: React.FC = () => {
           ))}
         </TableBody>
       </Table>
+
+      {/* QR Code Dialog */}
+      {currentQrCode && (
+        <Dialog open={!!currentQrCode} onOpenChange={handleCloseQrDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Driver Login QR Code</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center space-y-4">
+              <div className="border rounded-lg p-4 bg-white">
+                <QRCodeSVG value={currentQrCode} size={240} />
+              </div>
+              
+              {selectedDriverCredentials && (
+                <div className="w-full border rounded p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Username:</span>
+                    <span>{selectedDriverCredentials.username}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Password:</span>
+                    <span>{selectedDriverCredentials.password}</span>
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground text-center">
+                Driver can log in using the QR code or username/password credentials
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
