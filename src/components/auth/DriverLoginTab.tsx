@@ -16,6 +16,8 @@ interface DriverLoginTabProps {
   setPassword: (password: string) => void;
   handleLogin: (e: React.FormEvent) => void;
   error: string | null;
+  handleQrCodeScanned?: (qrData: string) => void; // Added this prop
+  handleScannerError?: (error: Error) => void;    // Added this prop
 }
 
 const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
@@ -24,7 +26,9 @@ const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
   setUsername,
   setPassword,
   handleLogin,
-  error
+  error,
+  handleQrCodeScanned,
+  handleScannerError
 }) => {
   const [loginMethod, setLoginMethod] = useState<"credentials" | "qr">("credentials");
   const { toast } = useToast();
@@ -65,6 +69,11 @@ const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
       } else {
         throw new Error("Invalid QR code format");
       }
+      
+      // Forward the QR code data to the parent component if the handler exists
+      if (handleQrCodeScanned) {
+        handleQrCodeScanned(decodedText);
+      }
     } catch (err) {
       toast({
         title: "Invalid QR Code",
@@ -81,6 +90,11 @@ const DriverLoginTab: React.FC<DriverLoginTabProps> = ({
       description: error.message,
       variant: "destructive"
     });
+    
+    // Forward the error to the parent component if the handler exists
+    if (handleScannerError) {
+      handleScannerError(error);
+    }
   };
   
   return (
