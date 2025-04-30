@@ -10,6 +10,7 @@ import DriverDashboard from "./components/driver/DriverDashboard";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { FirebaseProvider } from "./contexts/FirebaseContext";
+import AdminRoutes from "./components/admin/AdminRoutes";
 
 const queryClient = new QueryClient();
 

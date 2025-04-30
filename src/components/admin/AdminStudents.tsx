@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +8,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
 import { useFirebase } from '@/contexts/FirebaseContext';
-import { Plus, Edit, Trash, Search } from 'lucide-react';
+import { Plus, Edit, Trash, Search, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { generateCredentials } from '@/utils/authUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Student {
   id: string;
@@ -18,27 +21,52 @@ interface Student {
   guardianName: string;
   pickupPoint: string;
   busNumber: string;
+  driverId?: string;
+  username?: string;
+  password?: string;
 }
 
-const mockStudents: Student[] = [
-  { id: '1', name: 'Alice Johnson', grade: '3A', guardianName: 'Robert Johnson', pickupPoint: 'Main St & 1st Ave', busNumber: 'BUS001' },
-  { id: '2', name: 'Bob Smith', grade: '2B', guardianName: 'Mary Smith', pickupPoint: 'Oak St & 5th Ave', busNumber: 'BUS002' },
-  { id: '3', name: 'Charlie Brown', grade: '4C', guardianName: 'Lucy Brown', pickupPoint: 'Pine St & 3rd Ave', busNumber: 'BUS001' },
-];
+interface Driver {
+  id: string;
+  name: string;
+  busNumber: string;
+}
 
 const AdminStudents: React.FC = () => {
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCredentials, setShowCredentials] = useState<{[key: string]: boolean}>({});
   const [newStudent, setNewStudent] = useState<Omit<Student, 'id'>>({
     name: '',
     grade: '',
     guardianName: '',
     pickupPoint: '',
-    busNumber: ''
+    busNumber: '',
+    driverId: ''
   });
   
   const { firestore } = useFirebase();
   const { toast } = useToast();
+
+  // Mock data loading - in a real app, would fetch from Supabase
+  useEffect(() => {
+    // Mock student data
+    const mockStudents = [
+      { id: '1', name: 'Alice Johnson', grade: '3A', guardianName: 'Robert Johnson', pickupPoint: 'Main St & 1st Ave', busNumber: 'BUS001', driverId: '1', username: 'alice.johnson', password: '********' },
+      { id: '2', name: 'Bob Smith', grade: '2B', guardianName: 'Mary Smith', pickupPoint: 'Oak St & 5th Ave', busNumber: 'BUS002', driverId: '2', username: 'bob.smith', password: '********' },
+      { id: '3', name: 'Charlie Brown', grade: '4C', guardianName: 'Lucy Brown', pickupPoint: 'Pine St & 3rd Ave', busNumber: 'BUS001', driverId: '1', username: 'charlie.brown', password: '********' },
+    ];
+    setStudents(mockStudents);
+
+    // Mock driver data
+    const mockDrivers = [
+      { id: '1', name: 'John Doe', busNumber: 'BUS001' },
+      { id: '2', name: 'Jane Smith', busNumber: 'BUS002' },
+      { id: '3', name: 'Mike Johnson', busNumber: 'BUS003' },
+    ];
+    setDrivers(mockDrivers);
+  }, []);
 
   const filteredStudents = students.filter(student => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -47,23 +75,67 @@ const AdminStudents: React.FC = () => {
   );
 
   const handleAddStudent = () => {
-    // Here would be the actual Firestore implementation
+    // Generate credentials
+    const credentials = generateCredentials(newStudent.name, 'guardian');
+    
+    // Here would be the actual Supabase implementation to:
+    // 1. Create user account with the generated credentials
+    // 2. Store the student details
+    
     const id = Math.random().toString(36).substr(2, 9);
-    const student = { ...newStudent, id };
+    
+    // Create the new student record with credentials
+    const student = { 
+      ...newStudent, 
+      id,
+      username: credentials.username,
+      password: credentials.password
+    };
+    
     setStudents([...students, student as Student]);
+    
+    // Reset the form
+    setNewStudent({
+      name: '',
+      grade: '',
+      guardianName: '',
+      pickupPoint: '',
+      busNumber: '',
+      driverId: ''
+    });
+    
     toast({
       title: 'Success',
-      description: 'New student added successfully',
+      description: 'New student added successfully with auto-generated credentials',
     });
   };
 
   const handleDeleteStudent = (id: string) => {
-    // Here would be the actual Firestore implementation
+    // Here would be the actual Supabase implementation
     setStudents(students.filter(student => student.id !== id));
     toast({
       title: 'Success',
       description: 'Student deleted successfully',
     });
+  };
+
+  const toggleShowCredentials = (id: string) => {
+    setShowCredentials(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  // Update bus number when driver changes
+  const handleDriverChange = (driverId: string) => {
+    const driver = drivers.find(d => d.id === driverId);
+    if (driver) {
+      setNewStudent({
+        ...newStudent,
+        driverId,
+        busNumber: driver.busNumber
+      });
+    }
   };
 
   return (
@@ -87,7 +159,7 @@ const AdminStudents: React.FC = () => {
                 <Plus className="mr-2 h-4 w-4" /> Add Student
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Add New Student</DialogTitle>
               </DialogHeader>
@@ -125,16 +197,32 @@ const AdminStudents: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="busNumber">Bus Number</Label>
-                  <Input 
-                    id="busNumber" 
-                    value={newStudent.busNumber}
-                    onChange={(e) => setNewStudent({...newStudent, busNumber: e.target.value})}
-                  />
+                  <Label htmlFor="driver">Assign Driver</Label>
+                  <Select 
+                    value={newStudent.driverId} 
+                    onValueChange={handleDriverChange}
+                  >
+                    <SelectTrigger id="driver">
+                      <SelectValue placeholder="Select driver" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map(driver => (
+                        <SelectItem key={driver.id} value={driver.id}>
+                          {driver.name} - {driver.busNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Bus number will be automatically assigned based on the driver
+                  </p>
                 </div>
                 <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  A unique username and password will be automatically generated
+                </p>
               </div>
             </DialogContent>
           </Dialog>
@@ -149,6 +237,8 @@ const AdminStudents: React.FC = () => {
             <TableHead>Guardian</TableHead>
             <TableHead>Pickup Point</TableHead>
             <TableHead>Bus Number</TableHead>
+            <TableHead>Driver</TableHead>
+            <TableHead>Credentials</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -160,6 +250,26 @@ const AdminStudents: React.FC = () => {
               <TableCell>{student.guardianName}</TableCell>
               <TableCell>{student.pickupPoint}</TableCell>
               <TableCell>{student.busNumber}</TableCell>
+              <TableCell>
+                {drivers.find(d => d.id === student.driverId)?.name || 'Not assigned'}
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => toggleShowCredentials(student.id)}
+                >
+                  <Key className="h-3.5 w-3.5" />
+                  {showCredentials[student.id] ? 'Hide' : 'Show'}
+                </Button>
+                {showCredentials[student.id] && (
+                  <div className="mt-1 text-xs">
+                    <p>Username: {student.username}</p>
+                    <p>Password: {student.password}</p>
+                  </div>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button variant="ghost" size="icon">
