@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,16 +62,21 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors from the logo
+				// Custom colors for our app
 				sishu: {
-					blue: '#1E4B8D',     // Dark blue from the top part of the logo
-					green: '#B3D334',    // Lime green from the bottom part of the logo
-					pink: '#E85283',     // Pink color from one of the circles
-					purple: '#B075B5',   // Purple color from one of the circles
-					lightblue: '#71C5E8', // Light blue color from one of the circles
-					orange: '#F7941D',    // Orange accent from the logo
-					dark: '#222222',      // Dark color for text
-					light: '#F5F5F5'      // Light color for backgrounds
+					primary: '#1976D2',
+					secondary: '#4CAF50',
+					accent: '#FFC107',
+					danger: '#F44336',
+					dark: '#263238',
+					light: '#ECEFF1',
+					// Keep the logo colors for reference
+					blue: '#1E4B8D',
+					green: '#B3D334',
+					pink: '#E85283',
+					purple: '#B075B5',
+					lightblue: '#71C5E8',
+					orange: '#F7941D'
 				}
 			},
 			borderRadius: {

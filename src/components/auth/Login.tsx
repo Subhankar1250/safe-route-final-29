@@ -4,7 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Smartphone, Users, Settings } from "lucide-react";
+import { Smartphone, Users, Settings, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import GuardianLoginTab from './GuardianLoginTab';
 import DriverLoginTab from './DriverLoginTab';
@@ -95,7 +95,14 @@ const Login: React.FC = () => {
               className="h-24 w-24" 
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-sishu-blue">Sishu Tirtha Safe Route</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Sishu Tirtha Safe Route</CardTitle>
+          <div className="flex items-center justify-center space-x-1 text-sm">
+            <span>Baradongal</span>
+            <ArrowRight className="h-4 w-4" />
+            <span>Arambagh</span>
+            <ArrowRight className="h-4 w-4" />
+            <span>Hooghly</span>
+          </div>
           <CardDescription>The safest route for your child's journey</CardDescription>
         </CardHeader>
         
@@ -150,7 +157,7 @@ const Login: React.FC = () => {
       </Card>
       
       {/* Fixed Footer Text */}
-      <div className="w-full max-w-md mt-4 bg-sishu-blue text-white rounded-md p-2 text-center">
+      <div className="w-full max-w-md mt-4 bg-primary text-white rounded-md p-2 text-center">
         <p className="text-sm">Developed By : The Phoenix Devs.</p>
         <p className="text-sm">Created By : Subhankar Ghorui</p>
       </div>
