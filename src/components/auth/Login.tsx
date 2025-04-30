@@ -152,7 +152,8 @@ const Login: React.FC = () => {
         </div>
       </div>
       
-      <style jsx>{`
+      <style>
+        {`
         .scrolling-text {
           white-space: nowrap;
           overflow: hidden;
@@ -163,9 +164,11 @@ const Login: React.FC = () => {
           0% { transform: translateX(100%); }
           100% { transform: translateX(-100%); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
 
 export default Login;
+
