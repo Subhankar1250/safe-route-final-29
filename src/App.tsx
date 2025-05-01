@@ -11,27 +11,30 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import { AuthProvider } from "./contexts/AuthContext"; // Keep for backward compatibility during migration
+import { FirebaseProvider } from "./contexts/FirebaseContext"; // Add FirebaseProvider import
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SupabaseAuthProvider>
-      <AuthProvider> {/* Add back AuthProvider during migration to maintain compatibility */}
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
-            <Route path="/driver/dashboard" element={<DriverDashboard />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
-    </SupabaseAuthProvider>
+    <FirebaseProvider> {/* Add FirebaseProvider wrapping everything */}
+      <SupabaseAuthProvider>
+        <AuthProvider> {/* Keep AuthProvider during migration to maintain compatibility */}
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
+              <Route path="/driver/dashboard" element={<DriverDashboard />} />
+              <Route path="/admin/*" element={<AdminDashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </SupabaseAuthProvider>
+    </FirebaseProvider>
   </QueryClientProvider>
 );
 

@@ -27,13 +27,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!auth) return; // Add a check to ensure auth exists
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
     });
     
     return unsubscribe;
-  }, [auth]);
+  }, [auth]); // Add auth as a dependency
 
   // Login function
   const login = async (email: string, password: string) => {
