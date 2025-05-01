@@ -3,20 +3,18 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useFirebase } from '@/contexts/FirebaseContext';
 import { Plus, Search } from 'lucide-react';
 import { DriverQRCode } from '@/types/qrcode.types';
 import { mockQRCodes, driverOptions, busOptions } from './qr-code/QRCodeData';
 import QRCodeGenerator from './qr-code/QRCodeGenerator';
 import QRCodeViewer from './qr-code/QRCodeViewer';
 import QRCodeList from './qr-code/QRCodeList';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminQRCode: React.FC = () => {
   const [driverQRCodes, setDriverQRCodes] = useState<DriverQRCode[]>(mockQRCodes);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentQRCode, setCurrentQRCode] = useState<string>('');
-
-  const { firestore } = useFirebase();
 
   const filteredQRCodes = driverQRCodes.filter(qr => 
     qr.driverName.toLowerCase().includes(searchTerm.toLowerCase()) || 
