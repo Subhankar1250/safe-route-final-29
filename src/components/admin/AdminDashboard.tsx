@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Card } from '@/components/ui/card';
@@ -16,12 +15,12 @@ import AdminQRCode from './AdminQRCode';
 import AdminHistory from './AdminHistory';
 import CredentialGenerator from './credentials/CredentialGenerator';
 import AdminProfile from './AdminProfile';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [user] = useState({ name: 'Admin User' });
-  const { logout } = useAuth();
+  const { logout } = useSupabaseAuth(); // Use Supabase auth context instead of Firebase
 
   const handleLogout = async () => {
     try {

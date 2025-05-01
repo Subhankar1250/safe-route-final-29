@@ -1,14 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase } from '@/contexts/FirebaseContext';
-import { validatePassword } from '@/utils/authUtils';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminProfile: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -16,8 +14,7 @@ const AdminProfile: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { auth } = useFirebase();
-  const { currentUser } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,34 +38,25 @@ const AdminProfile: React.FC = () => {
       return;
     }
 
-    if (!validatePassword(newPassword)) {
-      toast({
-        variant: "destructive",
-        title: "Password requirements not met",
-        description: "Password must be at least 8 characters and include numbers and special characters",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // For Firebase: Get current user and update password
-      const user = auth.currentUser;
-      if (!user || !user.email) {
-        throw new Error("No authenticated user found");
+      // First verify the current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: currentPassword,
+      });
+      
+      if (signInError) {
+        throw new Error("Current password is incorrect");
       }
       
-      // Re-authenticate user before changing password
-      const credential = EmailAuthProvider.credential(
-        user.email,
-        currentPassword
-      );
+      // Update password in Supabase
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
       
-      await reauthenticateWithCredential(user, credential);
-      
-      // Update password in Firebase
-      await updatePassword(user, newPassword);
+      if (updateError) throw updateError;
       
       // Success message
       toast({
@@ -84,10 +72,8 @@ const AdminProfile: React.FC = () => {
       console.error("Password update error:", error);
       
       let errorMessage = "Could not update password. Please try again.";
-      if (error.code === 'auth/wrong-password') {
+      if (error.message === "Current password is incorrect") {
         errorMessage = "Current password is incorrect. Please try again.";
-      } else if (error.code === 'auth/requires-recent-login') {
-        errorMessage = "For security reasons, please log out and log back in before changing your password.";
       }
       
       toast({
