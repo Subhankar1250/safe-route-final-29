@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      credentials: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          qr_token: string | null
+          role: string
+          student_id: string | null
+          student_name: string | null
+          used: boolean
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          qr_token?: string | null
+          role: string
+          student_id?: string | null
+          student_name?: string | null
+          used?: boolean
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          qr_token?: string | null
+          role?: string
+          student_id?: string | null
+          student_name?: string | null
+          used?: boolean
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credentials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Students: {
         Row: {
           created_at: string
@@ -21,6 +68,33 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          role: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+          username?: string
         }
         Relationships: []
       }

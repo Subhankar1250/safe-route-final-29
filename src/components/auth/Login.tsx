@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -8,10 +8,8 @@ import { Smartphone, Users, Settings, ArrowRight } from "lucide-react";
 import GuardianLoginTab from './GuardianLoginTab';
 import DriverLoginTab from './DriverLoginTab';
 import AdminLoginTab from './AdminLoginTab';
-import { useAuth } from '@/contexts/AuthContext';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useFirebase } from '@/contexts/FirebaseContext';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -20,7 +18,42 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { auth, firestore } = useFirebase();
+  const { login, user } = useSupabaseAuth();
+
+  useEffect(() => {
+    // If user is already logged in, redirect based on role
+    if (user) {
+      // Check user role from Supabase
+      const checkUserRole = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+          
+          if (data) {
+            const userRole = data.role;
+            
+            // Navigate based on role
+            if (userRole === 'guardian') {
+              navigate('/guardian/dashboard');
+            } else if (userRole === 'driver') {
+              navigate('/driver/dashboard');
+            } else if (userRole === 'admin') {
+              navigate('/admin/dashboard');
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      };
+
+      checkUserRole();
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,63 +71,21 @@ const Login: React.FC = () => {
     });
     
     try {
-      // Convert username to email format for Firebase Auth
-      // This is just for demonstration - in a real app, you might have a different strategy
-      const email = `${username.toLowerCase()}@sishu-tirtha.app`;
+      // Convert username to email format if needed
+      const email = username.includes('@') ? username : `${username.toLowerCase()}@sishu-tirtha.app`;
       
-      // Firebase Authentication
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Supabase Authentication
+      await login(email, password);
       
-      // Check user role in Firestore
-      const userRoleQuery = query(
-        collection(firestore, "users"),
-        where("uid", "==", user.uid)
-      );
-      
-      const querySnapshot = await getDocs(userRoleQuery);
-      
-      if (querySnapshot.empty) {
-        throw new Error("User role not found");
-      }
-      
-      const userData = querySnapshot.docs[0].data();
-      const userRole = userData.role;
-      
-      // Validate correct role was selected
-      if (userRole !== role) {
-        setError(`You are not authorized as a ${role}. Please select the correct role.`);
-        await auth.signOut();
-        return;
-      }
-      
-      // Navigate based on role
-      if (role === "guardian") {
-        navigate("/guardian/dashboard");
-      } else if (role === "driver") {
-        navigate("/driver/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin/dashboard");
-      }
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.name || username}!`,
-      });
-      
+      // The auth state change listener will handle navigation
     } catch (err) {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
-      toast({
-        variant: "destructive",
-        title: "Login Error",
-        description: "Failed to authenticate. Please try again.",
-      });
     }
   };
 
   const handleQrCodeScanned = async (qrData: string) => {
-    // Process the QR code data
+    // Process the QR code data for driver login
     if (qrData.startsWith('driver_')) {
       toast({
         title: "QR Code Detected",
@@ -102,30 +93,26 @@ const Login: React.FC = () => {
       });
       
       try {
-        // Here you would verify the QR code with your backend/Firebase
-        // For demonstration:
-        const driverId = qrData.replace('driver_', '');
+        // Check for this QR token in the credentials table
+        const { data, error } = await supabase
+          .from('credentials')
+          .select('username, password')
+          .eq('qr_token', qrData)
+          .eq('role', 'driver')
+          .single();
         
-        // Query Firestore for this driver
-        const driverQuery = query(
-          collection(firestore, "users"),
-          where("driverId", "==", driverId),
-          where("role", "==", "driver")
-        );
-        
-        const querySnapshot = await getDocs(driverQuery);
-        
-        if (querySnapshot.empty) {
-          throw new Error("Driver not found");
+        if (error || !data) {
+          throw new Error("Invalid QR code");
         }
         
-        // Auto login the driver
-        navigate("/driver/dashboard");
+        // Auto fill the form with retrieved credentials
+        setUsername(data.username);
+        setPassword(data.password);
+        setRole('driver');
         
-        toast({
-          title: "QR Login successful",
-          description: "Welcome back!",
-        });
+        // Submit the form
+        await login(data.username, data.password);
+        
       } catch (error) {
         setError("Invalid QR code. Please try again or use your credentials.");
         toast({
