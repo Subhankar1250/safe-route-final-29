@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { useFirebase } from '@/contexts/FirebaseContext';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TripRecord {
   id: string;
@@ -66,8 +66,6 @@ const AdminHistory: React.FC = () => {
   const [trips, setTrips] = useState<TripRecord[]>(mockTrips);
   const [dateFilter, setDateFilter] = useState('');
   const [busFilter, setBusFilter] = useState('');
-  
-  const { firestore } = useFirebase();
 
   // Apply filters
   const filteredTrips = trips.filter(trip => {

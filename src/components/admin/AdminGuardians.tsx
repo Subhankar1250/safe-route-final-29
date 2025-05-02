@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
-import { useFirebase } from '@/contexts/FirebaseContext';
 import { Plus, Edit, Trash, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Guardian {
   id: string;
@@ -36,7 +36,6 @@ const AdminGuardians: React.FC = () => {
     address: ''
   });
   
-  const { firestore } = useFirebase();
   const { toast } = useToast();
 
   const filteredGuardians = guardians.filter(guardian => 
@@ -46,7 +45,7 @@ const AdminGuardians: React.FC = () => {
   );
 
   const handleAddGuardian = () => {
-    // Here would be the actual Firestore implementation
+    // Here would be the actual Supabase implementation
     const id = Math.random().toString(36).substr(2, 9);
     const guardian = { ...newGuardian, id, children: [] };
     setGuardians([...guardians, guardian as Guardian]);
@@ -57,7 +56,7 @@ const AdminGuardians: React.FC = () => {
   };
 
   const handleDeleteGuardian = (id: string) => {
-    // Here would be the actual Firestore implementation
+    // Here would be the actual Supabase implementation
     setGuardians(guardians.filter(guardian => guardian.id !== id));
     toast({
       title: 'Success',

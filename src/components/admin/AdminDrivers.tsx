@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
-import { useFirebase } from '@/contexts/FirebaseContext';
 import { Plus, Edit, Trash, Search, QrCode } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCredentials } from '@/utils/authUtils';
 import { QRCodeSVG } from 'qrcode.react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Driver {
   id: string;
@@ -74,7 +73,6 @@ const AdminDrivers: React.FC = () => {
   const [currentQrCode, setCurrentQrCode] = useState<string | null>(null);
   const [selectedDriverCredentials, setSelectedDriverCredentials] = useState<{username: string, password: string} | null>(null);
 
-  const { firestore } = useFirebase();
   const { toast } = useToast();
 
   // Filter drivers based on search term
