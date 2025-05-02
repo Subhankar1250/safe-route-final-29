@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useFirebase } from '@/contexts/FirebaseContext';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCredentials } from '@/utils/authUtils';
 import { Student, Driver } from './students/types';
@@ -25,7 +24,6 @@ const AdminStudents: React.FC = () => {
     driverId: ''
   });
   
-  const { firestore } = useFirebase();
   const { toast } = useToast();
 
   // Mock data loading - in a real app, would fetch from Supabase
