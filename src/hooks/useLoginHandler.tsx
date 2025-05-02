@@ -14,6 +14,14 @@ export const useLoginHandler = () => {
   const { toast } = useToast();
   const { login, user } = useSupabaseAuth();
 
+  // Pre-fill admin credentials if admin role is selected
+  useEffect(() => {
+    if (role === "admin") {
+      setUsername("admin@sisthutirtha.com");
+      setPassword("Suvo@1250");
+    }
+  }, [role]);
+
   useEffect(() => {
     // If user is already logged in, redirect based on role
     if (user) {
