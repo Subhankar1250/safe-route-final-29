@@ -19,6 +19,10 @@ export const useLoginHandler = () => {
     if (role === "admin") {
       setUsername("admin@sisthutirtha.com");
       setPassword("Suvo@1250");
+    } else {
+      // Clear fields when changing to other roles
+      setUsername("");
+      setPassword("");
     }
   }, [role]);
 

@@ -33,11 +33,6 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
           setUsername={setUsername}
           setPassword={setPassword}
         />
-        <div className="p-3 bg-blue-50 rounded-md border border-blue-200 text-sm">
-          <p><strong>Admin Credentials:</strong></p>
-          <p>Username: admin@sisthutirtha.com</p>
-          <p>Password: Suvo@1250</p>
-        </div>
       </CardContent>
       <CardFooter className="flex flex-col">
         <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
