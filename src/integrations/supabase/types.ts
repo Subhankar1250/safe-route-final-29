@@ -56,6 +56,101 @@ export type Database = {
           },
         ]
       }
+      drivers: {
+        Row: {
+          bus_number: string
+          created_at: string
+          id: string
+          license: string
+          name: string
+          phone: string
+          status: string
+        }
+        Insert: {
+          bus_number: string
+          created_at?: string
+          id?: string
+          license: string
+          name: string
+          phone: string
+          status?: string
+        }
+        Update: {
+          bus_number?: string
+          created_at?: string
+          id?: string
+          license?: string
+          name?: string
+          phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      guardian_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          student_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          student_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          student_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_credentials_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          bus_number: string
+          created_at: string
+          driver_id: string
+          grade: string
+          guardian_name: string
+          id: string
+          name: string
+          pickup_point: string
+        }
+        Insert: {
+          bus_number: string
+          created_at?: string
+          driver_id: string
+          grade: string
+          guardian_name: string
+          id?: string
+          name: string
+          pickup_point: string
+        }
+        Update: {
+          bus_number?: string
+          created_at?: string
+          driver_id?: string
+          grade?: string
+          guardian_name?: string
+          id?: string
+          name?: string
+          pickup_point?: string
+        }
+        Relationships: []
+      }
       Students: {
         Row: {
           created_at: string

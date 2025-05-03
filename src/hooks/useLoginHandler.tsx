@@ -74,9 +74,14 @@ export const useLoginHandler = () => {
       await login(email, password);
       
       // The auth state change listener will handle navigation
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: err.message || "Please check your credentials and try again."
+      });
     }
   };
 
@@ -107,9 +112,9 @@ export const useLoginHandler = () => {
         setRole('driver');
         
         // Submit the form
-        await login(data.username, data.password);
+        await login(`${data.username}@sishu-tirtha.app`, data.password);
         
-      } catch (error) {
+      } catch (error: any) {
         setError("Invalid QR code. Please try again or use your credentials.");
         toast({
           variant: "destructive",

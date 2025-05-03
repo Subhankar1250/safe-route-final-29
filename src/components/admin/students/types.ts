@@ -6,7 +6,7 @@ export interface Student {
   guardianName: string;
   pickupPoint: string;
   busNumber: string;
-  driverId: string; // Changed from optional to required
+  driverId: string;
   guardianUsername?: string;
   guardianPassword?: string;
 }
@@ -15,4 +15,7 @@ export interface Driver {
   id: string;
   name: string;
   busNumber: string;
+  phone: string;
+  license: string;
+  status: "active" | "inactive";
 }

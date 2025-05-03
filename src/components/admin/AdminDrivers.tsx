@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,49 +20,13 @@ interface Driver {
   license: string;
   busNumber: string;
   status: "active" | "inactive";
-  username: string;
-  password: string;
-  qrToken: string;
+  username?: string;
+  password?: string;
+  qrToken?: string;
 }
 
-const mockDrivers: Driver[] = [
-  { 
-    id: '1', 
-    name: 'John Doe', 
-    phone: '555-1234', 
-    license: 'DL12345', 
-    busNumber: 'BUS001', 
-    status: "active",
-    username: 'johndoe1234',
-    password: 'securePass123',
-    qrToken: 'driver_token_12345'
-  },
-  { 
-    id: '2', 
-    name: 'Jane Smith', 
-    phone: '555-5678', 
-    license: 'DL67890', 
-    busNumber: 'BUS002', 
-    status: "active",
-    username: 'janesmith5678',
-    password: 'securePass456',
-    qrToken: 'driver_token_67890'
-  },
-  { 
-    id: '3', 
-    name: 'Bob Johnson', 
-    phone: '555-9012', 
-    license: 'DL45678', 
-    busNumber: 'BUS003', 
-    status: "inactive",
-    username: 'bobjohnson9012',
-    password: 'securePass789',
-    qrToken: 'driver_token_54321'
-  },
-];
-
 const AdminDrivers: React.FC = () => {
-  const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newDriver, setNewDriver] = useState<Omit<Driver, 'id' | 'username' | 'password' | 'qrToken'>>({
     name: '',
@@ -75,6 +40,55 @@ const AdminDrivers: React.FC = () => {
 
   const { toast } = useToast();
 
+  // Fetch drivers from Supabase
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        // Fetch drivers from the database
+        const { data, error } = await supabase
+          .from('drivers')
+          .select('*');
+          
+        if (error) throw error;
+        
+        // Fetch credentials for each driver
+        const driversWithCredentials = await Promise.all(
+          data.map(async (driver) => {
+            const { data: credData } = await supabase
+              .from('credentials')
+              .select('username, password, qr_token')
+              .eq('user_id', driver.id)
+              .eq('role', 'driver')
+              .single();
+              
+            return {
+              id: driver.id,
+              name: driver.name,
+              phone: driver.phone,
+              license: driver.license,
+              busNumber: driver.bus_number,
+              status: driver.status as "active" | "inactive",
+              username: credData?.username,
+              password: credData?.password,
+              qrToken: credData?.qr_token
+            };
+          })
+        );
+        
+        setDrivers(driversWithCredentials);
+      } catch (error: any) {
+        console.error("Error fetching drivers:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to load drivers data"
+        });
+      }
+    };
+    
+    fetchDrivers();
+  }, [toast]);
+
   // Filter drivers based on search term
   const filteredDrivers = drivers.filter(driver => 
     driver.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -83,58 +97,157 @@ const AdminDrivers: React.FC = () => {
   );
   
   // Add new driver with auto-generated credentials and QR code token
-  const handleAddDriver = () => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const credentials = generateCredentials(newDriver.name, 'driver');
-    const qrToken = `driver_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Create a new driver with credentials and QR token
-    const driver: Driver = {
-      ...newDriver,
-      id,
-      username: credentials.username,
-      password: credentials.password,
-      qrToken
-    };
-    
-    setDrivers([...drivers, driver]);
-    
-    // Show the QR code with credentials
-    setCurrentQrCode(JSON.stringify({
-      token: qrToken,
-      username: credentials.username,
-      password: credentials.password
-    }));
-    
-    setSelectedDriverCredentials({
-      username: credentials.username,
-      password: credentials.password
-    });
-    
-    toast({
-      title: 'Success',
-      description: 'New driver added successfully with auto-generated login credentials',
-    });
+  const handleAddDriver = async () => {
+    try {
+      // Generate credentials and QR token
+      const credentials = generateCredentials(newDriver.name, 'driver');
+      const qrToken = `driver_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 1. Insert the driver into the drivers table
+      const { data: driverData, error: driverError } = await supabase
+        .from('drivers')
+        .insert([
+          {
+            name: newDriver.name,
+            phone: newDriver.phone,
+            license: newDriver.license,
+            bus_number: newDriver.busNumber,
+            status: newDriver.status
+          }
+        ])
+        .select()
+        .single();
+        
+      if (driverError) throw driverError;
+      
+      // 2. Store driver credentials
+      const { error: credError } = await supabase
+        .from('credentials')
+        .insert([
+          {
+            user_id: driverData.id,
+            username: credentials.username,
+            password: credentials.password,
+            qr_token: qrToken,
+            role: 'driver'
+          }
+        ]);
+        
+      if (credError) throw credError;
+      
+      // 3. Create the driver user account in Supabase Auth
+      const email = `${credentials.username}@sishu-tirtha.app`;
+      const { error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: credentials.password,
+        email_confirm: true,
+        user_metadata: {
+          role: 'driver',
+          driver_id: driverData.id
+        }
+      });
+      
+      if (authError) {
+        console.warn("Could not create auth user automatically:", authError);
+        // Continue anyway as the credentials are stored separately
+      }
+      
+      // 4. Add the new driver to our state
+      const newDriverWithCreds: Driver = {
+        id: driverData.id,
+        name: driverData.name,
+        phone: driverData.phone,
+        license: driverData.license,
+        busNumber: driverData.bus_number,
+        status: driverData.status as "active" | "inactive",
+        username: credentials.username,
+        password: credentials.password,
+        qrToken
+      };
+      
+      setDrivers([...drivers, newDriverWithCreds]);
+      
+      // Show the QR code with credentials
+      setCurrentQrCode(JSON.stringify({
+        token: qrToken,
+        username: credentials.username,
+        password: credentials.password
+      }));
+      
+      setSelectedDriverCredentials({
+        username: credentials.username,
+        password: credentials.password
+      });
+      
+      // Reset form
+      setNewDriver({
+        name: '',
+        phone: '',
+        license: '',
+        busNumber: '',
+        status: 'active',
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'New driver added successfully with auto-generated login credentials',
+      });
+    } catch (error: any) {
+      console.error("Error adding driver:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to add new driver"
+      });
+    }
   };
 
-  const handleDeleteDriver = (id: string) => {
-    setDrivers(drivers.filter(driver => driver.id !== id));
-    toast({
-      title: 'Success',
-      description: 'Driver deleted successfully',
-    });
+  const handleDeleteDriver = async (id: string) => {
+    try {
+      // Delete driver from database
+      const { error } = await supabase
+        .from('drivers')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Remove from state
+      setDrivers(drivers.filter(driver => driver.id !== id));
+      
+      toast({
+        title: 'Success',
+        description: 'Driver deleted successfully',
+      });
+    } catch (error: any) {
+      console.error("Error deleting driver:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete driver"
+      });
+    }
   };
 
   const viewDriverQrCode = (driver: Driver) => {
-    setCurrentQrCode(JSON.stringify({
-      token: driver.qrToken,
-      username: driver.username,
-      password: driver.password
-    }));
-    setSelectedDriverCredentials({
-      username: driver.username,
-      password: driver.password
-    });
+    if (driver.qrToken && driver.username && driver.password) {
+      setCurrentQrCode(JSON.stringify({
+        token: driver.qrToken,
+        username: driver.username,
+        password: driver.password
+      }));
+      
+      setSelectedDriverCredentials({
+        username: driver.username,
+        password: driver.password
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Driver does not have QR credentials set up"
+      });
+    }
   };
 
   const handleCloseQrDialog = () => {

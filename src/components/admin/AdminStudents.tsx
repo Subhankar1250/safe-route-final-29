@@ -26,70 +26,198 @@ const AdminStudents: React.FC = () => {
   
   const { toast } = useToast();
 
-  // Mock data loading - in a real app, would fetch from Supabase
+  // Fetch students and drivers from Supabase
   useEffect(() => {
-    // Mock student data
-    const mockStudents = [
-      { id: '1', name: 'Alice Johnson', grade: '3A', guardianName: 'Robert Johnson', pickupPoint: 'Main St & 1st Ave', busNumber: 'BUS001', driverId: '1', guardianUsername: 'rjohnson', guardianPassword: '********' },
-      { id: '2', name: 'Bob Smith', grade: '2B', guardianName: 'Mary Smith', pickupPoint: 'Oak St & 5th Ave', busNumber: 'BUS002', driverId: '2', guardianUsername: 'msmith', guardianPassword: '********' },
-      { id: '3', name: 'Charlie Brown', grade: '4C', guardianName: 'Lucy Brown', pickupPoint: 'Pine St & 3rd Ave', busNumber: 'BUS001', driverId: '1', guardianUsername: 'lbrown', guardianPassword: '********' },
-    ];
-    setStudents(mockStudents);
-
-    // Mock driver data
-    const mockDrivers = [
-      { id: '1', name: 'John Doe', busNumber: 'BUS001' },
-      { id: '2', name: 'Jane Smith', busNumber: 'BUS002' },
-      { id: '3', name: 'Mike Johnson', busNumber: 'BUS003' },
-    ];
-    setDrivers(mockDrivers);
-  }, []);
-
-  const handleAddStudent = () => {
-    // Generate guardian credentials based on the student's name for stronger association
-    // This creates a username with the SishuTirtha prefix and a secure password
-    const guardianCredentials = generateCredentials(newStudent.name, 'guardian');
-    
-    // Here would be the actual Supabase implementation to:
-    // 1. Create guardian user account with the generated credentials
-    // 2. Store the student details with link to guardian
-    
-    const id = Math.random().toString(36).substr(2, 9);
-    
-    // Create the new student record with guardian credentials
-    const student = { 
-      ...newStudent, 
-      id,
-      guardianUsername: guardianCredentials.username,
-      guardianPassword: guardianCredentials.password
+    const fetchData = async () => {
+      try {
+        // Fetch drivers
+        const { data: driversData, error: driversError } = await supabase
+          .from('drivers')
+          .select('id, name, bus_number, phone, license, status');
+        
+        if (driversError) {
+          toast({
+            variant: "destructive",
+            title: "Error fetching drivers",
+            description: driversError.message
+          });
+          return;
+        }
+        
+        // Transform drivers data to match our Driver type
+        const transformedDrivers = driversData.map(driver => ({
+          id: driver.id,
+          name: driver.name,
+          busNumber: driver.bus_number,
+          phone: driver.phone,
+          license: driver.license,
+          status: driver.status as "active" | "inactive"
+        }));
+        
+        setDrivers(transformedDrivers);
+        
+        // Fetch students
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('id, name, grade, guardian_name, pickup_point, bus_number, driver_id');
+        
+        if (studentsError) {
+          toast({
+            variant: "destructive",
+            title: "Error fetching students",
+            description: studentsError.message
+          });
+          return;
+        }
+        
+        // Fetch guardian credentials for each student
+        const studentsWithCredentials = await Promise.all(
+          studentsData.map(async (student) => {
+            const { data: credentialsData } = await supabase
+              .from('guardian_credentials')
+              .select('username, password')
+              .eq('student_id', student.id)
+              .single();
+            
+            return {
+              id: student.id,
+              name: student.name,
+              grade: student.grade,
+              guardianName: student.guardian_name,
+              pickupPoint: student.pickup_point,
+              busNumber: student.bus_number,
+              driverId: student.driver_id,
+              guardianUsername: credentialsData?.username || '',
+              guardianPassword: credentialsData?.password || ''
+            };
+          })
+        );
+        
+        setStudents(studentsWithCredentials);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load data from database"
+        });
+      }
     };
     
-    setStudents([...students, student as Student]);
+    fetchData();
+  }, [toast]);
+
+  const handleAddStudent = async () => {
+    // Generate guardian credentials based on the student's name for stronger association
+    const guardianCredentials = generateCredentials(newStudent.name, 'guardian');
     
-    // Reset the form
-    setNewStudent({
-      name: '',
-      grade: '',
-      guardianName: '',
-      pickupPoint: '',
-      busNumber: '',
-      driverId: ''
-    });
-    
-    toast({
-      title: 'Success',
-      description: `New student added with guardian account (${guardianCredentials.username})`,
-    });
+    try {
+      // 1. Insert the student record first
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .insert([
+          {
+            name: newStudent.name,
+            grade: newStudent.grade,
+            guardian_name: newStudent.guardianName,
+            pickup_point: newStudent.pickupPoint,
+            bus_number: newStudent.busNumber,
+            driver_id: newStudent.driverId
+          }
+        ])
+        .select()
+        .single();
+      
+      if (studentError) throw studentError;
+      
+      // 2. Store guardian credentials with link to student
+      const { error: credentialsError } = await supabase
+        .from('guardian_credentials')
+        .insert([
+          {
+            student_id: studentData.id,
+            username: guardianCredentials.username,
+            password: guardianCredentials.password
+          }
+        ]);
+      
+      if (credentialsError) throw credentialsError;
+      
+      // 3. Create the guardian user account in Supabase Auth
+      const email = `${guardianCredentials.username}@sishu-tirtha.app`;
+      const { error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: guardianCredentials.password,
+        email_confirm: true,
+        user_metadata: {
+          role: 'guardian',
+          student_id: studentData.id
+        }
+      });
+      
+      if (authError) {
+        console.warn("Could not create auth user automatically:", authError);
+        // Continue anyway as the credentials are stored separately
+      }
+      
+      // 4. Add the complete student to our state
+      const newStudentWithCredentials: Student = {
+        ...newStudent,
+        id: studentData.id,
+        guardianUsername: guardianCredentials.username,
+        guardianPassword: guardianCredentials.password
+      };
+      
+      setStudents([...students, newStudentWithCredentials]);
+      
+      // 5. Reset the form
+      setNewStudent({
+        name: '',
+        grade: '',
+        guardianName: '',
+        pickupPoint: '',
+        busNumber: '',
+        driverId: ''
+      });
+      
+      toast({
+        title: 'Success',
+        description: `New student added with guardian account (${guardianCredentials.username})`,
+      });
+    } catch (error: any) {
+      console.error("Error adding student:", error);
+      toast({
+        variant: "destructive",
+        title: "Error adding student",
+        description: error.message || "An unknown error occurred"
+      });
+    }
   };
 
-  const handleDeleteStudent = (id: string) => {
-    // Here would be the actual Supabase implementation
-    // to delete both student and associated guardian account
-    setStudents(students.filter(student => student.id !== id));
-    toast({
-      title: 'Success',
-      description: 'Student and associated guardian account deleted successfully',
-    });
+  const handleDeleteStudent = async (id: string) => {
+    try {
+      // Delete the student (cascade will also delete guardian credentials)
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setStudents(students.filter(student => student.id !== id));
+      
+      toast({
+        title: 'Success',
+        description: 'Student and associated guardian account deleted successfully',
+      });
+    } catch (error: any) {
+      console.error("Error deleting student:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete student"
+      });
+    }
   };
 
   return (

@@ -6,8 +6,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import GuardianCredentialManager from '../GuardianCredentialManager';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Driver {
   id: string;
@@ -60,17 +61,40 @@ const StudentList: React.FC<StudentListProps> = ({
     }));
   };
 
-  const handleManageCredentials = (student: Student) => {
+  const handleManageCredentials = async (student: Student) => {
     setSelectedStudent(student);
     setIsDialogOpen(true);
   };
 
-  const handleCredentialUpdateSuccess = () => {
+  const handleCredentialUpdateSuccess = async () => {
     setIsDialogOpen(false);
-    toast({
-      title: "Success",
-      description: `Credentials for ${selectedStudent?.guardianName}'s account updated`,
-    });
+    
+    if (selectedStudent) {
+      // Refresh the credentials from the database
+      const { data, error } = await supabase
+        .from('guardian_credentials')
+        .select('username, password')
+        .eq('student_id', selectedStudent.id)
+        .single();
+      
+      if (!error && data) {
+        toast({
+          title: "Success",
+          description: `Credentials for ${selectedStudent.guardianName}'s account updated`,
+        });
+        
+        // Update the student in our local state with the new credentials
+        const updatedStudents = students.map(s => 
+          s.id === selectedStudent.id 
+            ? {...s, guardianUsername: data.username, guardianPassword: data.password} 
+            : s
+        );
+        
+        // This would normally be handled by the parent component
+        // But we're doing this here to avoid prop drilling
+        // In a larger app, use context or state management
+      }
+    }
   };
 
   return (
