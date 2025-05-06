@@ -32,7 +32,12 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
           password={password}
           setUsername={setUsername}
           setPassword={setPassword}
+          usernamePlaceholder="Enter admin email"
         />
+        <div className="text-sm text-gray-500 italic">
+          <p>For admin access, please contact your system administrator.</p>
+          <p>Default admin: admin@sishu-tirtha.app</p>
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col">
         <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">

@@ -14,18 +14,6 @@ export const useLoginHandler = () => {
   const { toast } = useToast();
   const { login, user } = useSupabaseAuth();
 
-  // Auto-fill admin credentials when admin role is selected
-  useEffect(() => {
-    if (role === "admin") {
-      setUsername("admin@sishu-tirtha.app");
-      setPassword("admin123");
-      toast({
-        title: "Admin credentials filled",
-        description: "These are test credentials. Please change them in production.",
-      });
-    }
-  }, [role, toast]);
-
   useEffect(() => {
     // If user is already logged in, redirect based on role
     if (user) {
