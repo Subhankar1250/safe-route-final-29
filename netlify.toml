@@ -10,7 +10,7 @@
   to = "/index.html"
   status = 200
 
-# Add Auth0 environment variables placeholder
+# Add environment variables placeholders for deployment
 [template.environment]
-  VITE_AUTH0_DOMAIN = "Your Auth0 Domain"
-  VITE_AUTH0_CLIENT_ID = "Your Auth0 Client ID"
+  AUTH0_DOMAIN = "Your Auth0 Domain (optional)"
+  AUTH0_CLIENT_ID = "Your Auth0 Client ID (optional)"

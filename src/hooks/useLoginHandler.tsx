@@ -1,9 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useLoginHandler = () => {
   const [username, setUsername] = useState("");
@@ -12,42 +10,6 @@ export const useLoginHandler = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login, user } = useSupabaseAuth();
-
-  useEffect(() => {
-    // If user is already logged in, redirect based on role
-    if (user) {
-      // Check user role from Supabase
-      const checkUserRole = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-          if (error) throw error;
-          
-          if (data) {
-            const userRole = data.role;
-            
-            // Navigate based on role
-            if (userRole === 'guardian') {
-              navigate('/guardian/dashboard');
-            } else if (userRole === 'driver') {
-              navigate('/driver/dashboard');
-            } else if (userRole === 'admin') {
-              navigate('/admin/dashboard');
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching user role:", error);
-        }
-      };
-
-      checkUserRole();
-    }
-  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,13 +27,39 @@ export const useLoginHandler = () => {
     });
     
     try {
-      // Convert username to email format if needed
-      const email = username.includes('@') ? username : `${username.toLowerCase()}@sishu-tirtha.app`;
+      // Simple demo credentials for testing
+      if (role === 'guardian') {
+        if (username === 'guardian' && password === 'guardian123') {
+          toast({
+            title: "Login successful",
+            description: "Welcome, Guardian!"
+          });
+          navigate('/guardian/dashboard');
+          return;
+        }
+      } else if (role === 'driver') {
+        if (username === 'driver' && password === 'driver123') {
+          toast({
+            title: "Login successful",
+            description: "Welcome, Driver!"
+          });
+          navigate('/driver/dashboard');
+          return;
+        }
+      } else if (role === 'admin') {
+        if (username === 'admin@sishu-tirtha.app' && password === 'admin123') {
+          toast({
+            title: "Login successful",
+            description: "Welcome, Admin!"
+          });
+          navigate('/admin/dashboard');
+          return;
+        }
+      }
       
-      // Supabase Authentication
-      await login(email, password);
+      // If we got here, login failed
+      throw new Error("Invalid credentials");
       
-      // The auth state change listener will handle navigation
     } catch (err: any) {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
@@ -84,44 +72,27 @@ export const useLoginHandler = () => {
   };
 
   const handleQrCodeScanned = async (qrData: string) => {
-    // Process the QR code data for driver login
-    if (qrData.startsWith('driver_')) {
+    // Simple demo QR code handling
+    if (qrData === 'driver_test_qr_code') {
       toast({
         title: "QR Code Detected",
         description: "Authenticating with driver QR code...",
       });
       
-      try {
-        // Check for this QR token in the credentials table
-        const { data, error } = await supabase
-          .from('credentials')
-          .select('username, password')
-          .eq('qr_token', qrData)
-          .eq('role', 'driver')
-          .single();
-        
-        if (error || !data) {
-          throw new Error("Invalid QR code");
-        }
-        
-        // Auto fill the form with retrieved credentials
-        setUsername(data.username);
-        setPassword(data.password);
-        setRole('driver');
-        
-        // Submit the form
-        await login(`${data.username}@sishu-tirtha.app`, data.password);
-        
-      } catch (error: any) {
-        setError("Invalid QR code. Please try again or use your credentials.");
-        toast({
-          variant: "destructive",
-          title: "QR Authentication Failed",
-          description: "Could not authenticate with QR code.",
-        });
-      }
+      // Auto fill the form with demo credentials
+      setUsername('driver');
+      setPassword('driver123');
+      setRole('driver');
+      
+      // Submit the form - in real app, would validate QR token
+      navigate('/driver/dashboard');
     } else {
       setError("Invalid QR code. Please try again or use your credentials.");
+      toast({
+        variant: "destructive",
+        title: "QR Authentication Failed",
+        description: "Could not authenticate with QR code.",
+      });
     }
   };
 

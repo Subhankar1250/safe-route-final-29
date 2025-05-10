@@ -40,9 +40,20 @@ export const useLoginHandler = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  const handleAdminLogin = (username: string, password: string) => {
+    // For demo purposes only - in a real app, this would validate against a secure backend
+    if (username === 'admin@sishu-tirtha.app' && password === 'admin123') {
+      // Simple admin credentials for testing
+      navigate('/admin/dashboard');
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid credentials' };
+  };
+
   return {
     handleLogin,
     handleLogout,
+    handleAdminLogin,
     isAuthenticated,
     isLoading,
     user
