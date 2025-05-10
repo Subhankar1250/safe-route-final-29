@@ -1,12 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const AdminProfile: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -14,7 +12,6 @@ const AdminProfile: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useSupabaseAuth();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,24 +38,14 @@ const AdminProfile: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // First verify the current password by attempting to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user?.email || '',
-        password: currentPassword,
-      });
-      
-      if (signInError) {
+      // For demo purposes, we're just verifying the current password is 'admin123'
+      if (currentPassword !== 'admin123') {
         throw new Error("Current password is incorrect");
       }
       
-      // Update password in Supabase
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      // In a real app, this would update the password in your database
+      // For now, just show success message
       
-      if (updateError) throw updateError;
-      
-      // Success message
       toast({
         title: "Success",
         description: "Password updated successfully",

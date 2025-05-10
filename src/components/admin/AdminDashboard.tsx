@@ -7,6 +7,8 @@ import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } fro
 import { 
   Users, File, Map, Clock, Settings, Database, Key, UserCircle
 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useLoginHandler } from '@/hooks/useLoginHandler';
 
 import AdminDrivers from './AdminDrivers';
 import AdminStudents from './AdminStudents';
@@ -16,20 +18,20 @@ import AdminQRCode from './AdminQRCode';
 import AdminHistory from './AdminHistory';
 import CredentialGenerator from './credentials/CredentialGenerator';
 import AdminProfile from './AdminProfile';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [user] = useState({ name: 'Admin User' });
-  const { logout } = useSupabaseAuth(); // Use Supabase auth context
+  const { handleLogout } = useLoginHandler();
+  const { toast } = useToast();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+  const logout = () => {
+    handleLogout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out."
+    });
+    navigate('/login');
   };
 
   return (
@@ -53,7 +55,7 @@ const AdminDashboard: React.FC = () => {
                 </MenubarTrigger>
                 <MenubarContent>
                   <MenubarItem onClick={() => navigate('/admin/profile')}>My Profile</MenubarItem>
-                  <MenubarItem onClick={handleLogout}>Logout</MenubarItem>
+                  <MenubarItem onClick={logout}>Logout</MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
             </Menubar>
