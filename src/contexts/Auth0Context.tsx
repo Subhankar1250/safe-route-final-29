@@ -1,17 +1,32 @@
 
 import { createContext, useContext } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 
+// Define types for our auth context
+interface Auth0ContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: any | null;
+  loginWithRedirect: () => Promise<void>;
+  logout: (options?: any) => void;
+}
+
 // Create a context for Auth0 authentication
-const Auth0Context = createContext<ReturnType<typeof useAuth0> | null>(null);
+const Auth0Context = createContext<Auth0ContextType | null>(null);
 
 // Provider component for Auth0 authentication
 export const Auth0ContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const auth0 = useAuth0();
+  // Mock implementation since we're removing Auth0
+  const mockAuth0 = {
+    isAuthenticated: false,
+    isLoading: false,
+    user: null,
+    loginWithRedirect: async () => {},
+    logout: () => {}
+  };
   
   return (
-    <Auth0Context.Provider value={auth0}>
+    <Auth0Context.Provider value={mockAuth0}>
       {children}
     </Auth0Context.Provider>
   );
@@ -38,6 +53,7 @@ export const useLoginHandler = () => {
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
+    navigate('/login');
   };
 
   const handleAdminLogin = (username: string, password: string) => {

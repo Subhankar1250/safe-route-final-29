@@ -11,7 +11,6 @@ import { Plus, Edit, Trash, Search, QrCode } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCredentials } from '@/utils/authUtils';
 import { QRCodeSVG } from 'qrcode.react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Driver {
   id: string;
@@ -24,6 +23,43 @@ interface Driver {
   password?: string;
   qrToken?: string;
 }
+
+// Mock data for demo purposes
+const mockDrivers: Driver[] = [
+  {
+    id: "1",
+    name: "John Smith",
+    phone: "555-123-4567",
+    license: "DL12345678",
+    busNumber: "B001",
+    status: "active",
+    username: "driver1",
+    password: "driver123",
+    qrToken: "driver_token_123"
+  },
+  {
+    id: "2",
+    name: "Emily Johnson",
+    phone: "555-987-6543",
+    license: "DL87654321",
+    busNumber: "B002",
+    status: "active",
+    username: "driver2",
+    password: "driver123",
+    qrToken: "driver_token_456"
+  },
+  {
+    id: "3",
+    name: "Michael Wilson",
+    phone: "555-456-7890",
+    license: "DL45678901",
+    busNumber: "B003",
+    status: "inactive",
+    username: "driver3",
+    password: "driver123",
+    qrToken: "driver_token_789"
+  }
+];
 
 const AdminDrivers: React.FC = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -40,54 +76,10 @@ const AdminDrivers: React.FC = () => {
 
   const { toast } = useToast();
 
-  // Fetch drivers from Supabase
+  // Load mock drivers on component mount
   useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        // Fetch drivers from the database
-        const { data, error } = await supabase
-          .from('drivers')
-          .select('*');
-          
-        if (error) throw error;
-        
-        // Fetch credentials for each driver
-        const driversWithCredentials = await Promise.all(
-          data.map(async (driver) => {
-            const { data: credData } = await supabase
-              .from('credentials')
-              .select('username, password, qr_token')
-              .eq('user_id', driver.id)
-              .eq('role', 'driver')
-              .single();
-              
-            return {
-              id: driver.id,
-              name: driver.name,
-              phone: driver.phone,
-              license: driver.license,
-              busNumber: driver.bus_number,
-              status: driver.status as "active" | "inactive",
-              username: credData?.username,
-              password: credData?.password,
-              qrToken: credData?.qr_token
-            };
-          })
-        );
-        
-        setDrivers(driversWithCredentials);
-      } catch (error: any) {
-        console.error("Error fetching drivers:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to load drivers data"
-        });
-      }
-    };
-    
-    fetchDrivers();
-  }, [toast]);
+    setDrivers(mockDrivers);
+  }, []);
 
   // Filter drivers based on search term
   const filteredDrivers = drivers.filter(driver => 
@@ -103,63 +95,14 @@ const AdminDrivers: React.FC = () => {
       const credentials = generateCredentials(newDriver.name, 'driver');
       const qrToken = `driver_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // 1. Insert the driver into the drivers table
-      const { data: driverData, error: driverError } = await supabase
-        .from('drivers')
-        .insert([
-          {
-            name: newDriver.name,
-            phone: newDriver.phone,
-            license: newDriver.license,
-            bus_number: newDriver.busNumber,
-            status: newDriver.status
-          }
-        ])
-        .select()
-        .single();
-        
-      if (driverError) throw driverError;
-      
-      // 2. Store driver credentials
-      const { error: credError } = await supabase
-        .from('credentials')
-        .insert([
-          {
-            user_id: driverData.id,
-            username: credentials.username,
-            password: credentials.password,
-            qr_token: qrToken,
-            role: 'driver'
-          }
-        ]);
-        
-      if (credError) throw credError;
-      
-      // 3. Create the driver user account in Supabase Auth
-      const email = `${credentials.username}@sishu-tirtha.app`;
-      const { error: authError } = await supabase.auth.admin.createUser({
-        email: email,
-        password: credentials.password,
-        email_confirm: true,
-        user_metadata: {
-          role: 'driver',
-          driver_id: driverData.id
-        }
-      });
-      
-      if (authError) {
-        console.warn("Could not create auth user automatically:", authError);
-        // Continue anyway as the credentials are stored separately
-      }
-      
-      // 4. Add the new driver to our state
+      // Create new driver
       const newDriverWithCreds: Driver = {
-        id: driverData.id,
-        name: driverData.name,
-        phone: driverData.phone,
-        license: driverData.license,
-        busNumber: driverData.bus_number,
-        status: driverData.status as "active" | "inactive",
+        id: Date.now().toString(),
+        name: newDriver.name,
+        phone: newDriver.phone,
+        license: newDriver.license,
+        busNumber: newDriver.busNumber,
+        status: newDriver.status,
         username: credentials.username,
         password: credentials.password,
         qrToken
@@ -204,14 +147,6 @@ const AdminDrivers: React.FC = () => {
 
   const handleDeleteDriver = async (id: string) => {
     try {
-      // Delete driver from database
-      const { error } = await supabase
-        .from('drivers')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
       // Remove from state
       setDrivers(drivers.filter(driver => driver.id !== id));
       
