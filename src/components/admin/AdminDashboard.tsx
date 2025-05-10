@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { 
-  Users, File, Map, Clock, Settings, Database, Key, UserCircle
+  Users, File, Map, Clock, Settings, Key, UserCircle
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useLoginHandler } from '@/hooks/useLoginHandler';
+import { useAuth } from '@/contexts/AuthContext';
 
 import AdminDrivers from './AdminDrivers';
 import AdminStudents from './AdminStudents';
@@ -22,11 +21,11 @@ import AdminProfile from './AdminProfile';
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [user] = useState({ name: 'Admin User' });
-  const { handleLogout } = useLoginHandler();
+  const { logout } = useAuth();
   const { toast } = useToast();
 
-  const logout = () => {
-    handleLogout();
+  const handleLogout = () => {
+    logout();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out."
@@ -55,7 +54,7 @@ const AdminDashboard: React.FC = () => {
                 </MenubarTrigger>
                 <MenubarContent>
                   <MenubarItem onClick={() => navigate('/admin/profile')}>My Profile</MenubarItem>
-                  <MenubarItem onClick={logout}>Logout</MenubarItem>
+                  <MenubarItem onClick={handleLogout}>Logout</MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
             </Menubar>

@@ -5,8 +5,6 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import LoginCredentialFields from './LoginCredentialFields';
 import ErrorAlert from './ErrorAlert';
 import { Key } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useLoginHandler } from '@/contexts/Auth0Context';
 
 interface AdminLoginTabProps {
   username: string;
@@ -22,28 +20,11 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
   password,
   setUsername,
   setPassword,
-  error: propError
+  handleLogin,
+  error
 }) => {
-  const [error, setError] = useState<string | null>(propError);
-  const navigate = useNavigate();
-  const { handleAdminLogin } = useLoginHandler();
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) {
-      setError("Please enter both username and password");
-      return;
-    }
-    
-    const result = handleAdminLogin(username, password);
-    
-    if (!result.success) {
-      setError(result.error || "Invalid credentials");
-    }
-  };
-  
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleLogin}>
       <CardContent className="space-y-4">
         <ErrorAlert error={error} />
         <LoginCredentialFields 

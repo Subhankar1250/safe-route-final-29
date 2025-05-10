@@ -1,119 +1,83 @@
 
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useLoginHandler = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"guardian" | "driver" | "admin">("guardian");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<"guardian" | "driver" | "admin">('guardian');
   const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
+  const { login, logout } = useAuth();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Simple validation
+
     if (!username || !password) {
-      setError("Please enter both username and password");
+      setError('Please enter both username/email and password');
       return;
     }
-    
-    toast({
-      title: "Logging in...",
-      description: `Attempting to log in as ${role}`,
-    });
-    
+
     try {
-      // Simple demo credentials for testing
-      if (role === 'guardian') {
-        if (username === 'guardian' && password === 'guardian123') {
-          toast({
-            title: "Login successful",
-            description: "Welcome, Guardian!"
-          });
-          navigate('/guardian/dashboard');
-          return;
-        }
+      await login(username, password, role);
+      
+      // Redirect based on role
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
       } else if (role === 'driver') {
-        if (username === 'driver' && password === 'driver123') {
-          toast({
-            title: "Login successful",
-            description: "Welcome, Driver!"
-          });
-          navigate('/driver/dashboard');
-          return;
-        }
-      } else if (role === 'admin') {
-        if (username === 'admin@sishu-tirtha.app' && password === 'admin123') {
-          toast({
-            title: "Login successful",
-            description: "Welcome, Admin!"
-          });
-          navigate('/admin/dashboard');
-          return;
-        }
+        navigate('/driver/dashboard');
+      } else if (role === 'guardian') {
+        navigate('/guardian/dashboard');
       }
-      
-      // If we got here, login failed
-      throw new Error("Invalid credentials");
-      
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError("Login failed. Please check your credentials.");
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: err.message || "Please check your credentials and try again."
-      });
+    } catch (error: any) {
+      setError(error.message || 'Login failed');
     }
   };
 
-  const handleQrCodeScanned = async (qrData: string) => {
-    // Simple demo QR code handling
-    if (qrData === 'driver_test_qr_code') {
-      toast({
-        title: "QR Code Detected",
-        description: "Authenticating with driver QR code...",
-      });
-      
-      // Auto fill the form with demo credentials
-      setUsername('driver');
-      setPassword('driver123');
-      setRole('driver');
-      
-      // Submit the form - in real app, would validate QR token
-      navigate('/driver/dashboard');
-    } else {
-      setError("Invalid QR code. Please try again or use your credentials.");
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // For QR code scanning in driver login
+  const handleQrCodeScanned = async (data: string) => {
+    try {
+      const qrData = JSON.parse(data);
+      if (qrData.token && qrData.username && qrData.password) {
+        setUsername(qrData.username);
+        setPassword(qrData.password);
+        setRole('driver');
+        
+        // Automatically login with scanned credentials
+        await login(qrData.username, qrData.password, 'driver');
+        navigate('/driver/dashboard');
+        
+        toast({
+          title: "QR Login Successful",
+          description: "You have been logged in using QR code",
+        });
+      } else {
+        throw new Error("Invalid QR code format");
+      }
+    } catch (error: any) {
+      console.error("QR code scan error:", error);
+      setError(error.message || "Could not log in with QR code");
       toast({
         variant: "destructive",
-        title: "QR Authentication Failed",
-        description: "Could not authenticate with QR code.",
+        title: "QR Login Failed",
+        description: "Invalid QR code or credentials",
       });
     }
   };
 
   const handleScannerError = (error: Error) => {
-    setError(`Scanner error: ${error.message}`);
-    toast({
-      variant: "destructive",
-      title: "Scanner Error",
-      description: error.message,
-    });
-  };
-
-  // Add the handleLogout function that's being used in AdminDashboard.tsx
-  const handleLogout = () => {
-    // For demo app, we just clear any state and redirect to login
-    setUsername('');
-    setPassword('');
-    setError(null);
-    
-    // In a real app, this would handle token invalidation, etc.
-    console.log("User logged out");
+    console.error("Scanner error:", error);
+    setError("QR scanner error: " + error.message);
   };
 
   return {
@@ -125,8 +89,10 @@ export const useLoginHandler = () => {
     setRole,
     error,
     handleLogin,
+    handleLogout,
     handleQrCodeScanned,
-    handleScannerError,
-    handleLogout // Export the handleLogout function
+    handleScannerError
   };
 };
+
+export default useLoginHandler;

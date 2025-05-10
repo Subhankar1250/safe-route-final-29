@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminProfile: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -12,6 +13,7 @@ const AdminProfile: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ const AdminProfile: React.FC = () => {
       
       // In a real app, this would update the password in your database
       // For now, just show success message
+      await new Promise(resolve => setTimeout(resolve, 800)); // Fake delay
       
       toast({
         title: "Success",
@@ -76,6 +79,13 @@ const AdminProfile: React.FC = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Admin Profile</h2>
+      
+      <div className="mb-6 p-4 bg-white rounded-md shadow-sm">
+        <h3 className="text-lg font-medium mb-2">User Information</h3>
+        <p><strong>Name:</strong> {user?.name || 'Admin User'}</p>
+        <p><strong>Email:</strong> {user?.email || 'admin@sishu-tirtha.app'}</p>
+        <p><strong>Role:</strong> {user?.role || 'admin'}</p>
+      </div>
       
       <Card>
         <CardHeader>

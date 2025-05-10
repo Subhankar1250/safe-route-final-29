@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,6 @@ import { mockQRCodes, driverOptions, busOptions } from './qr-code/QRCodeData';
 import QRCodeGenerator from './qr-code/QRCodeGenerator';
 import QRCodeViewer from './qr-code/QRCodeViewer';
 import QRCodeList from './qr-code/QRCodeList';
-import { supabase } from '@/integrations/supabase/client';
 
 const AdminQRCode: React.FC = () => {
   const [driverQRCodes, setDriverQRCodes] = useState<DriverQRCode[]>(mockQRCodes);

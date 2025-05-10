@@ -19,7 +19,7 @@ const Login: React.FC = () => {
     role, 
     setRole, 
     error, 
-    handleLogin, 
+    handleLogin,
     handleQrCodeScanned, 
     handleScannerError 
   } = useLoginHandler();

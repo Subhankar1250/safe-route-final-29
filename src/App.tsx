@@ -9,13 +9,13 @@ import GuardianDashboard from "./components/guardian/GuardianDashboard";
 import DriverDashboard from "./components/driver/DriverDashboard";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
-import { Auth0ContextProvider } from "./contexts/Auth0Context";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Auth0ContextProvider>
+    <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -28,7 +28,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
-    </Auth0ContextProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { validatePassword } from '@/utils/authUtils';
-import { supabase } from '@/integrations/supabase/client';
 
 interface GuardianCredentialManagerProps {
   guardianId: string;
@@ -47,33 +46,19 @@ const GuardianCredentialManager: React.FC<GuardianCredentialManagerProps> = ({
     setIsLoading(true);
 
     try {
-      // For Supabase admin operations, we need to use an edge function
-      // Let's simulate success for now since we don't have the edge function yet
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Password reset for guardian ${guardianId} with email ${guardianEmail}`);
-        
-        // In production, an edge function would handle this
-        toast({
-          title: "Success",
-          description: `Password for ${guardianUsername} has been reset`,
-        });
-        
-        onSuccess();
-        setNewPassword('');
-      } else {
-        // This would call a Supabase edge function in production
-        // The function would use Supabase admin API to reset the password
-        // For now, we'll just simulate success
-        console.log(`Password reset for guardian ${guardianId} with email ${guardianEmail}`);
-        
-        toast({
-          title: "Success",
-          description: `Password for ${guardianUsername} has been reset`,
-        });
-        
-        onSuccess();
-        setNewPassword('');
-      }
+      // Simulate password reset with a timeout
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // In a real app, this would update the password in a database
+      console.log(`Password reset for guardian ${guardianId} with username ${guardianUsername}`);
+      
+      toast({
+        title: "Success",
+        description: `Password for ${guardianUsername} has been reset`,
+      });
+      
+      onSuccess();
+      setNewPassword('');
     } catch (error) {
       console.error("Password reset error:", error);
       toast({
