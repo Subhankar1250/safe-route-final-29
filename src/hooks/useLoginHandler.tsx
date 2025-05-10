@@ -105,6 +105,17 @@ export const useLoginHandler = () => {
     });
   };
 
+  // Add the handleLogout function that's being used in AdminDashboard.tsx
+  const handleLogout = () => {
+    // For demo app, we just clear any state and redirect to login
+    setUsername('');
+    setPassword('');
+    setError(null);
+    
+    // In a real app, this would handle token invalidation, etc.
+    console.log("User logged out");
+  };
+
   return {
     username,
     setUsername,
@@ -115,6 +126,7 @@ export const useLoginHandler = () => {
     error,
     handleLogin,
     handleQrCodeScanned,
-    handleScannerError
+    handleScannerError,
+    handleLogout // Export the handleLogout function
   };
 };
