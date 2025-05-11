@@ -6,7 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Clock, Route, User, Users, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StudentCheckList from './StudentCheckList';
-import { supabase } from '@/integrations/supabase/client';
 
 const DriverDashboard: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
@@ -111,17 +110,10 @@ const DriverDashboard: React.FC = () => {
     
     console.log(`Sending location update: ${latitude}, ${longitude}`);
     
-    // In a real app, this would send the data to Supabase
+    // In a real app, this would send the data to a backend service
     try {
-      // Example of how this would work with Supabase
-      // await supabase.from('bus_locations').upsert({
-      //   bus_number: 'BUS001',
-      //   driver_id: 'current_driver_id',
-      //   latitude,
-      //   longitude,
-      //   timestamp: new Date().toISOString(),
-      //   is_active: true
-      // });
+      // Mock implementation - in a real app, we would send this data to the server
+      console.log(`Location updated: Lat ${latitude}, Lng ${longitude}`);
     } catch (error) {
       console.error('Error updating location:', error);
     }
@@ -133,7 +125,7 @@ const DriverDashboard: React.FC = () => {
       navigator.geolocation.clearWatch(watchId);
     }
     
-    // Here would be the actual logout logic when integrated with Supabase
+    // Here would be the actual logout logic
     toast({
       title: "Logging out",
       description: "You have been successfully logged out.",

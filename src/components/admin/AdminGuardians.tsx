@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,6 @@ import {
 } from '@/components/ui/table';
 import { Plus, Edit, Trash, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Guardian {
   id: string;

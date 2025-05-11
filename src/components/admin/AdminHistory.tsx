@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -6,7 +5,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TripRecord {
   id: string;

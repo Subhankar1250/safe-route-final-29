@@ -10,7 +10,6 @@ import { Plus, Edit, Trash, Search, Map } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Route {
   id: string;
