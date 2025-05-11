@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps } from 'firebase/app';
 import { 
   getAuth, 
@@ -128,7 +129,7 @@ export const createAdminUser = async (email: string, password: string, name: str
       email,
       name,
       role: 'admin',
-      username: username || email,
+      username: email, // Using email as the default username
       isAdmin: true,
       createdAt: new Date()
     });
