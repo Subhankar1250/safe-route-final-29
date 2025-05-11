@@ -1,13 +1,11 @@
 
 // Firebase configuration
-// Replace these values with your own Firebase project configuration
-// You can find these values in your Firebase project settings
-
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCVzPoSMKpNz-eMjpWi9hjlHIEz5n_qAK8",
+  authDomain: "saferoute-916a0.firebaseapp.com",
+  projectId: "saferoute-916a0",
+  storageBucket: "saferoute-916a0.firebasestorage.app",
+  messagingSenderId: "149089501759",
+  appId: "1:149089501759:web:2489f5f69f713d90046e8a",
+  measurementId: "G-Z4L234WHWF"
 };
