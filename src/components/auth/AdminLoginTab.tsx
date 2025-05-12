@@ -26,19 +26,26 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
   error
 }) => {
   const [initializing, setInitializing] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const { toast } = useToast();
   
   // This function should only be used in development
   const handleInitializeAdmin = async () => {
     setInitializing(true);
+    setInitError(null);
     try {
+      console.log("Starting admin initialization...");
       const result = await initializeRealAdmin();
       if (result) {
         toast({
           title: "Admin Created",
-          description: "The admin account has been initialized successfully",
+          description: "The admin account has been initialized successfully. You can now log in.",
         });
+        // Auto-fill the credentials for convenience
+        setUsername("subhankar.ghorui1111@gmail.com");
+        setPassword("Suvo@1250");
       } else {
+        setInitError("Failed to create admin account. Check console for details.");
         toast({
           variant: "destructive",
           title: "Failed",
@@ -46,6 +53,8 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
         });
       }
     } catch (error: any) {
+      console.error("Admin initialization error:", error);
+      setInitError(error.message || "An unexpected error occurred");
       toast({
         variant: "destructive",
         title: "Error",
@@ -59,7 +68,7 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
   return (
     <form onSubmit={handleLogin}>
       <CardContent className="space-y-4">
-        <ErrorAlert error={error} />
+        <ErrorAlert error={error || initError} />
         <LoginCredentialFields 
           username={username}
           password={password}
