@@ -5,6 +5,8 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import LoginCredentialFields from './LoginCredentialFields';
 import ErrorAlert from './ErrorAlert';
 import { Key } from 'lucide-react';
+import { initializeRealAdmin } from '@/utils/initializeAdmin';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AdminLoginTabProps {
   username: string;
@@ -23,6 +25,37 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
   handleLogin,
   error
 }) => {
+  const [initializing, setInitializing] = useState(false);
+  const { toast } = useToast();
+  
+  // This function should only be used in development
+  const handleInitializeAdmin = async () => {
+    setInitializing(true);
+    try {
+      const result = await initializeRealAdmin();
+      if (result) {
+        toast({
+          title: "Admin Created",
+          description: "The admin account has been initialized successfully",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed",
+          description: "Could not create admin account, check console for details",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+      });
+    } finally {
+      setInitializing(false);
+    }
+  };
+  
   return (
     <form onSubmit={handleLogin}>
       <CardContent className="space-y-4">
@@ -36,10 +69,22 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
         />
         
         <div className="text-sm text-gray-500 mt-2">
-          <p>Default admin credentials for testing:</p>
-          <p>Email: admin@sishu-tirtha.app</p>
-          <p>Password: admin123</p>
+          <p>Use the official admin email to login</p>
+          <p>Email: subhankar.ghorui1111@gmail.com</p>
         </div>
+        
+        {/* Only show in development mode */}
+        {import.meta.env.DEV && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full text-xs"
+            onClick={handleInitializeAdmin}
+            disabled={initializing}
+          >
+            {initializing ? "Creating Admin..." : "Initialize Admin Account (Dev Only)"}
+          </Button>
+        )}
       </CardContent>
       <CardFooter className="flex flex-col">
         <Button type="submit" className="w-full bg-sishu-primary hover:bg-blue-700">
