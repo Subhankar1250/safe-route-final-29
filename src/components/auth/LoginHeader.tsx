@@ -10,7 +10,7 @@ const LoginHeader: React.FC = () => {
         <img 
           src="/lovable-uploads/5660de73-133f-4d61-aa57-08b2be7b455d.png" 
           alt="Sishu Tirtha Safe Route" 
-          className="h-24 w-24" 
+          className="h-24 w-24 shadow-lg rounded-full" 
         />
       </div>
       <CardTitle className="text-2xl font-bold text-primary">Sishu Tirtha Safe Route</CardTitle>
