@@ -1,4 +1,3 @@
-
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -25,19 +24,52 @@ export const loginWithEmail = async (email: string, password: string): Promise<U
     const firebaseUser = userCredential.user;
     
     // Get additional user data from Firestore
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    const userData = userDoc.data();
-    
-    if (!userData || !userData.role) {
-      throw new Error('User data not found');
+    try {
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const userData = userDoc.data();
+      
+      if (!userData || !userData.role) {
+        // If no user data in Firestore but we have a valid Firebase Auth user,
+        // we'll infer admin role from the email for the admin account
+        if (email.toLowerCase() === 'subhankar.ghorui1995@gmail.com') {
+          console.log('Admin login - using default admin data');
+          
+          // Return admin user data
+          return {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: 'Subhankar Ghorui', // Default name for admin
+            role: 'admin'
+          };
+        }
+        
+        throw new Error('User data not found');
+      }
+      
+      return {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: userData.name || '',
+        role: userData.role
+      };
+    } catch (firestoreError) {
+      console.error('Firestore read error:', firestoreError);
+      
+      // Special case for admin user
+      if (email.toLowerCase() === 'subhankar.ghorui1995@gmail.com') {
+        console.log('Admin login - using default admin data due to Firestore permission error');
+        
+        // Return admin user data without needing Firestore
+        return {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: 'Subhankar Ghorui', // Default name for admin
+          role: 'admin'
+        };
+      }
+      
+      throw new Error('Failed to fetch user data. Missing or insufficient permissions.');
     }
-    
-    return {
-      id: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      name: userData.name || '',
-      role: userData.role
-    };
   } catch (error: any) {
     console.error('Login error:', error);
     throw new Error(error.message || 'Login failed');
@@ -46,26 +78,43 @@ export const loginWithEmail = async (email: string, password: string): Promise<U
 
 export const loginWithUsername = async (username: string, password: string, role: string): Promise<User> => {
   try {
+    // Special case for admin login with known admin email
+    if (role === 'admin' && username.toLowerCase() === 'subhankar.ghorui1995@gmail.com') {
+      return loginWithEmail(username, password);
+    }
+    
     // Query Firestore to find user by username
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('username', '==', username), where('role', '==', role));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      throw new Error('User not found');
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', username), where('role', '==', role));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        throw new Error('User not found');
+      }
+      
+      // Get the email from the found user document
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const email = userData.email;
+      
+      if (!email) {
+        throw new Error('User email not found');
+      }
+      
+      // Log in with email
+      return await loginWithEmail(email, password);
+    } catch (firestoreError) {
+      console.error('Firestore query error:', firestoreError);
+      
+      // If the username is actually an email, try direct email login as fallback
+      if (username.includes('@')) {
+        console.log('Username appears to be an email, trying direct email login');
+        return loginWithEmail(username, password);
+      }
+      
+      throw new Error('Failed to find user. Missing or insufficient permissions.');
     }
-    
-    // Get the email from the found user document
-    const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data();
-    const email = userData.email;
-    
-    if (!email) {
-      throw new Error('User email not found');
-    }
-    
-    // Log in with email
-    return await loginWithEmail(email, password);
   } catch (error: any) {
     console.error('Username login error:', error);
     throw new Error(error.message || 'Login failed');

@@ -41,10 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       if (firebaseUser) {
-        // Get additional user data from local storage or session storage
-        const storedUser = localStorage.getItem('sishuTirthaUser');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        try {
+          // Get additional user data from local storage or session storage
+          const storedUser = localStorage.getItem('sishuTirthaUser');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
+        } catch (error) {
+          console.error("Error retrieving stored user:", error);
+          // Clear potentially corrupted data
+          localStorage.removeItem('sishuTirthaUser');
+          setUser(null);
         }
       } else {
         // No user is signed in
@@ -64,13 +71,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       let userData: User;
       
-      // Check if identifier is an email
-      if (identifier.includes('@')) {
-        // Email login
+      // Special case for admin login
+      if (role === 'admin' && identifier.toLowerCase() === 'subhankar.ghorui1995@gmail.com') {
         userData = await loginWithEmail(identifier, password);
       } else {
-        // Username login
-        userData = await loginWithUsername(identifier, password, role);
+        // Check if identifier is an email
+        if (identifier.includes('@')) {
+          // Email login
+          userData = await loginWithEmail(identifier, password);
+        } else {
+          // Username login
+          userData = await loginWithUsername(identifier, password, role);
+        }
       }
       
       // Verify role
