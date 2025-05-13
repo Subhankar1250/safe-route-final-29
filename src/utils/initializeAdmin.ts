@@ -7,7 +7,7 @@ import { createAdminUser } from "@/services/firebase/admin";
  */
 export const initializeRealAdmin = async () => {
   try {
-    const adminEmail = "subhankar.ghorui1111@gmail.com";
+    const adminEmail = "Subhankar.ghorui1995@gmail.com";
     const adminPassword = "Suvo@1250";
     const adminName = "Subhankar Ghorui";
     

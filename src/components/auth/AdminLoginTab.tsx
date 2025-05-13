@@ -44,7 +44,7 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
           description: "The admin account has been initialized successfully. You can now log in.",
         });
         // Auto-fill the credentials for convenience
-        setUsername("subhankar.ghorui1111@gmail.com");
+        setUsername("Subhankar.ghorui1995@gmail.com");
         setPassword("Suvo@1250");
       } else {
         setInitError("Failed to create admin account. Check console for details.");
@@ -94,7 +94,7 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
         
         <div className="text-sm text-gray-500 mt-2">
           <p>Use the official admin email to login</p>
-          <p>Email: subhankar.ghorui1111@gmail.com</p>
+          <p>Email: Subhankar.ghorui1995@gmail.com</p>
         </div>
         
         {/* Only show in development mode */}
