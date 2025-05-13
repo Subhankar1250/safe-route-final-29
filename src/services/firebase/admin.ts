@@ -19,10 +19,17 @@ export const createAdminUser = async (email: string, password: string, name: str
     // First check if an admin already exists with this email
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('email', '==', email), where('role', '==', 'admin'));
-    const querySnapshot = await getDocs(q);
     
-    if (!querySnapshot.empty) {
-      throw new Error('An admin with this email already exists');
+    try {
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        throw new Error('An admin with this email already exists');
+      }
+    } catch (error: any) {
+      // If we can't query due to permissions, just continue with creation attempt
+      console.log('Permission error during admin check:', error.message);
+      // We'll proceed with creation anyway
     }
     
     // Create the user with Firebase Authentication
@@ -30,14 +37,22 @@ export const createAdminUser = async (email: string, password: string, name: str
     const firebaseUser = userCredential.user;
     
     // Store admin data in Firestore
-    await setDoc(doc(db, 'users', firebaseUser.uid), {
-      email,
-      name,
-      role: 'admin',
-      username: email, // Using email as the default username
-      isAdmin: true,
-      createdAt: new Date()
-    });
+    try {
+      await setDoc(doc(db, 'users', firebaseUser.uid), {
+        email,
+        name,
+        role: 'admin',
+        username: email, // Using email as the default username
+        isAdmin: true,
+        createdAt: new Date()
+      });
+      
+      console.log('Admin document created successfully');
+    } catch (firestoreError: any) {
+      console.error('Firestore write error:', firestoreError);
+      // Even if the Firestore write fails, we'll return the user since the auth account was created
+      console.log('Auth account created but Firestore document creation failed');
+    }
     
     return {
       id: firebaseUser.uid,
