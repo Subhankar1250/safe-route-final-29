@@ -16,7 +16,14 @@ export const initializeRealAdmin = async () => {
     if (!window.navigator.onLine) {
       throw new Error("No internet connection. Please check your network connection and try again.");
     }
+
+    // Log Firebase initialization status
+    console.log("Checking Firebase connection status...");
     
+    // Add a delay to ensure Firebase is properly initialized
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log("Attempting to create admin user...");
     await createAdminUser(adminEmail, adminPassword, adminName);
     console.log("Admin account created successfully!");
     
@@ -29,6 +36,14 @@ export const initializeRealAdmin = async () => {
       return true; // Return true if the account already exists
     }
     
-    return false;
+    if (error.code === 'auth/network-request-failed') {
+      console.error("Network request failed. Please check your internet connection and Firebase configuration.");
+    }
+    
+    if (error.message && error.message.includes("Firebase")) {
+      console.error("Firebase error:", error.message);
+    }
+    
+    throw error; // Re-throw the error so it can be caught by the calling function
   }
 };

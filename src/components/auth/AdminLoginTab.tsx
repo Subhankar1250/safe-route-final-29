@@ -34,7 +34,9 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
     setInitializing(true);
     setInitError(null);
     try {
-      console.log("Starting admin initialization...");
+      console.log("Starting admin initialization process...");
+      console.log("Firebase config is being used from:", import.meta.env.DEV ? "development" : "production");
+      
       const result = await initializeRealAdmin();
       if (result) {
         toast({
@@ -54,11 +56,24 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
       }
     } catch (error: any) {
       console.error("Admin initialization error:", error);
-      setInitError(error.message || "An unexpected error occurred");
+      const errorMessage = error.message || "An unexpected error occurred";
+      setInitError(errorMessage);
+      
+      // Provide more specific error messages based on error codes
+      let toastMessage = "An unexpected error occurred";
+      
+      if (error.code === 'auth/network-request-failed') {
+        toastMessage = "Network connection failed. Please check your internet connection.";
+      } else if (error.code === 'auth/app-deleted' || error.code === 'auth/app-not-authorized') {
+        toastMessage = "Firebase configuration error. Please check your Firebase setup.";
+      } else if (error.message) {
+        toastMessage = error.message;
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "An unexpected error occurred",
+        description: toastMessage,
       });
     } finally {
       setInitializing(false);
@@ -84,15 +99,18 @@ const AdminLoginTab: React.FC<AdminLoginTabProps> = ({
         
         {/* Only show in development mode */}
         {import.meta.env.DEV && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full text-xs"
-            onClick={handleInitializeAdmin}
-            disabled={initializing}
-          >
-            {initializing ? "Creating Admin..." : "Initialize Admin Account (Dev Only)"}
-          </Button>
+          <div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full text-xs mb-2"
+              onClick={handleInitializeAdmin}
+              disabled={initializing}
+            >
+              {initializing ? "Creating Admin..." : "Initialize Admin Account (Dev Only)"}
+            </Button>
+            <p className="text-xs text-amber-600">If you see initialization errors, check your browser console for details.</p>
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex flex-col">
