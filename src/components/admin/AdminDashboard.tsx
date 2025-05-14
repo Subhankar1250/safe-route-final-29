@@ -5,10 +5,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar';
 import { 
-  Users, Map, Clock, Settings, UserCircle
+  Users, Map, Clock, Settings, UserCircle, BarChart3, Route
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import LanguageSelector from '../common/LanguageSelector';
 
 import AdminDrivers from './AdminDrivers';
 import AdminStudents from './AdminStudents';
@@ -16,6 +17,8 @@ import AdminGuardians from './AdminGuardians';
 import AdminLocations from './AdminLocations';
 import AdminHistory from './AdminHistory';
 import AdminProfile from './AdminProfile';
+import RouteOptimization from './routes/RouteOptimization';
+import AnalyticsDashboard from './analytics/AnalyticsDashboard';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -45,6 +48,7 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-xl font-bold">Sishu Tirtha Admin Panel</h1>
           </div>
           <div className="flex items-center space-x-4">
+            <LanguageSelector />
             <span>{user.name}</span>
             <Menubar className="border-none bg-transparent">
               <MenubarMenu>
@@ -62,7 +66,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-8">
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center p-4 h-24"
@@ -102,6 +106,24 @@ const AdminDashboard: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center p-4 h-24"
+            onClick={() => navigate('/admin/route-optimization')}
+          >
+            <Route className="h-6 w-6 mb-2" />
+            <span>Route Optimization</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col items-center justify-center p-4 h-24"
+            onClick={() => navigate('/admin/analytics')}
+          >
+            <BarChart3 className="h-6 w-6 mb-2" />
+            <span>Analytics</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col items-center justify-center p-4 h-24"
             onClick={() => navigate('/admin/history')}
           >
             <Clock className="h-6 w-6 mb-2" />
@@ -128,6 +150,8 @@ const AdminDashboard: React.FC = () => {
             <Route path="/locations" element={<AdminLocations />} />
             <Route path="/history" element={<AdminHistory />} />
             <Route path="/profile" element={<AdminProfile />} />
+            <Route path="/route-optimization" element={<RouteOptimization />} />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
           </Routes>
         </Card>
       </div>

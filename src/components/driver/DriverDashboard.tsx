@@ -1,239 +1,187 @@
 
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Clock, Route, User, Users, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import StudentCheckList from './StudentCheckList';
+import { MapPin, Clock, UserCheck } from "lucide-react";
+import LiveOpenLayersMap from "../map/LiveOpenLayersMap";
+import StudentCheckList from "./StudentCheckList";
+import StudentAttendance from "./StudentAttendance";
+import EmergencyAlerts from "./EmergencyAlerts";
+import LanguageSelector from "../common/LanguageSelector";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { registerForPushNotifications } from '@/services/notifications';
 
 const DriverDashboard: React.FC = () => {
-  const [isActive, setIsActive] = useState(false);
-  const [tripStartTime, setTripStartTime] = useState<Date | null>(null);
-  const [elapsed, setElapsed] = useState('00:00:00');
-  const [location, setLocation] = useState<GeolocationPosition | null>(null);
-  const [watchId, setWatchId] = useState<number | null>(null);
-  const navigate = useNavigate();
+  const [user] = useState({ name: 'John Driver', busNumber: 'BUS-001' });
+  const [tripActive, setTripActive] = useState(false);
+  const [tripStartTime, setTripStartTime] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
-  // Simulated trip data
-  const tripData = {
-    route: "Route #12B - Dehradun Public School",
-    students: 18,
-    stops: 7,
-    estimatedDuration: "45 minutes",
-    nextStop: "Rajpur Road, Gandhi Park",
-    etaNextStop: "5 minutes"
-  };
-
+  // Request notifications permission
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>;
-    
-    if (isActive && tripStartTime) {
-      timer = setInterval(() => {
-        const now = new Date();
-        const diff = Math.floor((now.getTime() - tripStartTime.getTime()) / 1000);
-        
-        const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
-        const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-        const seconds = Math.floor(diff % 60).toString().padStart(2, '0');
-        
-        setElapsed(`${hours}:${minutes}:${seconds}`);
-      }, 1000);
-    }
-    
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isActive, tripStartTime]);
+    registerForPushNotifications().then(success => {
+      if (success) {
+        console.log('Push notifications registration successful');
+      } else {
+        console.log('Push notifications not supported or permission denied');
+      }
+    });
+  }, []);
 
-  const handleStartTrip = () => {
-    setIsActive(true);
-    setTripStartTime(new Date());
+  // Simulate location tracking
+  useEffect(() => {
+    if (tripActive) {
+      const interval = setInterval(() => {
+        // Simulate location changes
+        setCurrentLocation(prev => {
+          if (!prev) return { latitude: 30.3165, longitude: 78.0322 };
+          
+          return {
+            latitude: prev.latitude + (Math.random() * 0.002 - 0.001),
+            longitude: prev.longitude + (Math.random() * 0.002 - 0.001)
+          };
+        });
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [tripActive]);
+
+  const startTrip = () => {
+    const startTime = new Date().toLocaleTimeString();
+    setTripStartTime(startTime);
+    setTripActive(true);
     
-    // Start tracking location
+    // Get current position
     if (navigator.geolocation) {
-      const id = navigator.geolocation.watchPosition(
-        position => {
-          setLocation(position);
-          sendLocationUpdate(position);
-        },
-        error => {
-          console.error('Error getting location:', error);
-          toast({
-            title: "Location Error",
-            description: `Failed to get location: ${error.message}`,
-            variant: "destructive",
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
           });
         },
-        { 
-          enableHighAccuracy: true, 
-          maximumAge: 10000,
-          timeout: 5000 
+        (error) => {
+          console.error("Error getting location:", error);
+          // Use default location if geolocation fails
+          setCurrentLocation({ latitude: 30.3165, longitude: 78.0322 });
         }
       );
-      
-      setWatchId(id);
     } else {
-      toast({
-        title: "Location Not Available",
-        description: "Geolocation is not supported by this browser.",
-        variant: "destructive",
-      });
+      // Use default location if geolocation not supported
+      setCurrentLocation({ latitude: 30.3165, longitude: 78.0322 });
     }
     
     toast({
       title: "Trip Started",
-      description: "Location tracking is now active.",
-      duration: 3000,
+      description: `Trip started at ${startTime}. Safe journey!`,
     });
   };
 
-  const handleEndTrip = () => {
-    setIsActive(false);
-    
-    // Stop tracking location
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      setWatchId(null);
-    }
-    
+  const endTrip = () => {
+    setTripActive(false);
     toast({
       title: "Trip Ended",
-      description: `Total trip time: ${elapsed}`,
-      duration: 3000,
+      description: `Trip ended at ${new Date().toLocaleTimeString()}.`,
     });
-  };
-
-  const sendLocationUpdate = async (position: GeolocationPosition) => {
-    const { latitude, longitude } = position.coords;
-    
-    console.log(`Sending location update: ${latitude}, ${longitude}`);
-    
-    // In a real app, this would send the data to a backend service
-    try {
-      // Mock implementation - in a real app, we would send this data to the server
-      console.log(`Location updated: Lat ${latitude}, Lng ${longitude}`);
-    } catch (error) {
-      console.error('Error updating location:', error);
-    }
-  };
-
-  const handleLogout = () => {
-    // If tracking is active, stop it
-    if (isActive && watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-    }
-    
-    // Here would be the actual logout logic
-    toast({
-      title: "Logging out",
-      description: "You have been successfully logged out.",
-    });
-    
-    navigate("/login");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <div className="bg-sishu-primary text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Sishu Tirtha - Driver Dashboard</h1>
-          <Button variant="ghost" onClick={handleLogout} className="text-white">
-            <LogOut className="mr-2 h-4 w-4" /> Logout
-          </Button>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/5660de73-133f-4d61-aa57-08b2be7b455d.png" 
+              alt="Sishu Tirtha Safe Route" 
+              className="h-10 w-10" 
+            />
+            <h1 className="text-xl font-bold">{t('dashboard.welcome')}, {user.name}</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <LanguageSelector />
+            <Button 
+              variant={tripActive ? "destructive" : "outline"} 
+              size="sm"
+              onClick={tripActive ? endTrip : startTrip}
+            >
+              {tripActive ? "End Trip" : "Start Trip"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Trip Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Current Route</p>
-                  <p className="font-medium flex items-center">
-                    <Route className="mr-2 h-4 w-4" /> {tripData.route}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Students</p>
-                    <p className="font-medium">{tripData.students}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Total Stops</p>
-                    <p className="font-medium">{tripData.stops}</p>
-                  </div>
+      <div className="container mx-auto p-4 space-y-6">
+        {/* Trip Status Card */}
+        <Card className="bg-white shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <MapPin className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Next Stop</p>
-                  <p className="font-medium">{tripData.nextStop}</p>
-                  <p className="text-sm text-sishu-primary">ETA: {tripData.etaNextStop}</p>
+                  <p className="text-sm text-gray-500">{t('bus.onRoute')}</p>
+                  <h3 className="font-medium">Bus {user.busNumber}</h3>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Tracking Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <Clock className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="text-right">
                   <p className="text-sm text-gray-500">Status</p>
-                  <p className="font-medium flex items-center">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                    {isActive ? 'Trip in progress' : 'Not started'}
-                  </p>
-                </div>
-                {isActive && (
-                  <>
-                    <div>
-                      <p className="text-sm text-gray-500">Trip Time</p>
-                      <p className="font-medium flex items-center">
-                        <Clock className="mr-2 h-4 w-4" /> {elapsed}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">GPS Location</p>
-                      <p className="font-medium flex items-center">
-                        <MapPin className="mr-2 h-4 w-4" /> 
-                        {location ? 
-                          `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}` : 
-                          'Acquiring...'}
-                      </p>
-                    </div>
-                  </>
-                )}
-                <div className="pt-2">
-                  {!isActive ? (
-                    <Button 
-                      className="w-full bg-sishu-primary hover:bg-blue-700" 
-                      onClick={handleStartTrip}
-                    >
-                      Start Trip
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="destructive" 
-                      className="w-full" 
-                      onClick={handleEndTrip}
-                    >
-                      End Trip
-                    </Button>
-                  )}
+                  <h3 className="font-medium">
+                    {tripActive 
+                      ? `Active (Started at ${tripStartTime})` 
+                      : "Not Active"}
+                  </h3>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              
+              <div className="flex items-center space-x-4">
+                <div className="bg-purple-100 p-2 rounded-full">
+                  <UserCheck className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Students</p>
+                  <h3 className="font-medium">0/30 on board</h3>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Maps and Student List */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Live Map */}
+            <Card className="h-96">
+              <CardContent className="p-0 h-full">
+                <LiveOpenLayersMap selectedBusId={user.busNumber} />
+              </CardContent>
+            </Card>
+            
+            {/* Emergency Alerts */}
+            <EmergencyAlerts 
+              busNumber={user.busNumber} 
+              driverName={user.name} 
+              currentLocation={currentLocation || undefined}
+            />
+          </div>
+          
+          <div className="space-y-6">
+            {/* Student Attendance */}
+            <StudentAttendance tripId="current-trip" isActive={tripActive} />
+            
+            {/* Student Checklist */}
+            <StudentCheckList isActive={tripActive} />
+          </div>
         </div>
-
-        <StudentCheckList isActive={isActive} />
       </div>
     </div>
   );
