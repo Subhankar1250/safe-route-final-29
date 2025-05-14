@@ -7,7 +7,8 @@ import {
   loginWithUsername, 
   registerUser, 
   signOut, 
-  onAuthStateChange 
+  onAuthStateChange,
+  resetUserPassword
 } from '@/services/firebase';
 
 // Define types for our auth context
@@ -154,8 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Reset password
   const resetPassword = async (email: string) => {
     try {
-      // In Firebase this would call sendPasswordResetEmail
-      // For now just show a toast
+      await resetUserPassword(email);
       toast({
         title: "Reset email sent",
         description: "Check your email to reset your password.",

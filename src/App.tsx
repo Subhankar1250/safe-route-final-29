@@ -10,6 +10,7 @@ import DriverDashboard from "./components/driver/DriverDashboard";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />

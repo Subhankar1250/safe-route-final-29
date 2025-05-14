@@ -1,9 +1,11 @@
+
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User as FirebaseUser
+  User as FirebaseUser,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { 
   collection, 
@@ -154,4 +156,14 @@ export const signOut = async (): Promise<void> => {
 // Current user observer
 export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// Reset password function
+export const resetUserPassword = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error: any) {
+    console.error('Password reset error:', error);
+    throw new Error(error.message || 'Failed to send password reset email');
+  }
 };
