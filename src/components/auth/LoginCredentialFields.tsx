@@ -10,6 +10,7 @@ interface LoginCredentialFieldsProps {
   setUsername: (username: string) => void;
   setPassword: (password: string) => void;
   usernamePlaceholder?: string;
+  showForgotPassword?: boolean;
 }
 
 const LoginCredentialFields: React.FC<LoginCredentialFieldsProps> = ({
@@ -17,7 +18,8 @@ const LoginCredentialFields: React.FC<LoginCredentialFieldsProps> = ({
   password,
   setUsername,
   setPassword,
-  usernamePlaceholder = "Enter username"
+  usernamePlaceholder = "Enter username",
+  showForgotPassword = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   
@@ -60,6 +62,11 @@ const LoginCredentialFields: React.FC<LoginCredentialFieldsProps> = ({
           </button>
         </div>
       </div>
+      {showForgotPassword && (
+        <div className="text-right">
+          <a href="#" className="text-sm text-primary hover:underline">Forgot Password?</a>
+        </div>
+      )}
     </>
   );
 };
